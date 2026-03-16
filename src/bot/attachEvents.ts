@@ -14,10 +14,20 @@ export function attachEvents(
 ): void {
   attachChatCommands(bot);
 
-  bot.on("spawn", () => {
+  bot.on("spawn", async () => {
     log("Spawned in world");
+    if (config.gamemodeOnSpawn) {
+      bot.chat(`/gamemode ${config.gamemodeOnSpawn}`);
+    }
     if (config.chatOnSpawn) {
       bot.chat(config.chatOnSpawn);
+    }
+    if (config.viewerPort) {
+      const pv = (await import("prismarine-viewer")) as {
+        default: { mineflayer: (b: Bot, o: { port: number }) => void };
+      };
+      pv.default.mineflayer(bot, { port: config.viewerPort });
+      log("Viewer running at http://localhost:%d", config.viewerPort);
     }
   });
 

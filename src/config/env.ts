@@ -5,6 +5,8 @@ export interface BotConfig {
   version: string | undefined;
   auth: string;
   chatOnSpawn: string | undefined;
+  gamemodeOnSpawn: "creative" | "survival" | "adventure" | "spectator" | undefined;
+  viewerPort: number | undefined;
   reconnect: boolean;
   reconnectDelayMs: number;
 }
@@ -30,6 +32,18 @@ export function loadConfig(): BotConfig {
 
   const version = process.env.MC_VERSION?.trim();
   const chatOnSpawn = process.env.BOT_CHAT_ON_SPAWN?.trim();
+  const gamemodeRaw = process.env.BOT_GAMEMODE_ON_SPAWN?.trim()?.toLowerCase();
+  const gamemodeOnSpawn =
+    gamemodeRaw === "creative" ||
+    gamemodeRaw === "survival" ||
+    gamemodeRaw === "adventure" ||
+    gamemodeRaw === "spectator"
+      ? gamemodeRaw
+      : undefined;
+  const viewerPortRaw = process.env.BOT_VIEWER_PORT?.trim();
+  const viewerPort = viewerPortRaw ? parseInt(viewerPortRaw, 10) : NaN;
+  const viewerPortValid =
+    !Number.isNaN(viewerPort) && viewerPort > 0 && viewerPort <= 65535;
   const reconnect = process.env.BOT_RECONNECT?.toLowerCase() === "true";
   const reconnectDelayMs = parseInt(
     process.env.BOT_RECONNECT_DELAY_MS ?? "5000",
@@ -43,6 +57,8 @@ export function loadConfig(): BotConfig {
     version: version === "" ? undefined : version,
     auth: process.env.MC_AUTH!.trim().toLowerCase(),
     chatOnSpawn: chatOnSpawn === "" ? undefined : chatOnSpawn,
+    gamemodeOnSpawn,
+    viewerPort: viewerPortValid ? viewerPort : undefined,
     reconnect,
     reconnectDelayMs: Number.isNaN(reconnectDelayMs) ? 5000 : reconnectDelayMs,
   };
