@@ -319,3 +319,82 @@ ipcMain.handle("recorder:runVillageY", async (event, { projectId, inputDatasetId
   await saveIndex(index2);
   return outputDs;
 });
+
+ipcMain.handle("recorder:runJunglePyramids", async (event, { projectId, inputDatasetId, connection }) => {
+  const index = await loadIndex();
+  const project = index.projects.find((x) => x.id === projectId);
+  if (!project) throw new Error("Project not found");
+  const inputDs = (project.datasets || []).find((d) => d.id === inputDatasetId && d.role === "input");
+  if (!inputDs) throw new Error("Input dataset not found");
+  if (!connection || !connection.host || !connection.port || !connection.username) {
+    throw new Error("Project connection (host, port, username) is required");
+  }
+  const projectDir = join(getProjectsPath(), projectId);
+  const outputId = `output-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const outputPath = join(projectDir, `${outputId}.csv`);
+
+  const sendProgress = (current, total) => {
+    event.sender.send("recorder:progress", { current, total });
+  };
+
+  const { createBot } = await import("mc-bot/lib");
+  const { attachEvents } = await import("mc-bot/lib");
+  const { runVillageRecorder } = await import("mc-bot/lib");
+  const { buildBotConfigFromConnection } = await import("mc-bot/lib");
+
+  const botConfig = buildBotConfigFromConnection({
+    host: connection.host,
+    port: Number(connection.port),
+    username: connection.username,
+    version: connection.version || undefined,
+  });
+  const bot = createBot(botConfig);
+  attachEvents(bot, botConfig, { onEnd: () => {} });
+
+  await new Promise((resolve, reject) => {
+    bot.once("spawn", resolve);
+    bot.once("error", reject);
+    bot.once("kicked", (reason) => reject(new Error(String(reason))));
+    bot.once("end", (reason) => reject(new Error("Disconnected: " + (reason || "unknown"))));
+  });
+
+  const recorderConfig = {
+    csvPath: inputDs.filePath,
+    outputPath,
+    tpY: 200,
+    delayAfterTpMs: 500,
+    waitForGround: true,
+    groundTimeoutMs: 15000,
+  };
+
+  try {
+    await runVillageRecorder(bot, recorderConfig, {
+      onProgress: (p) => sendProgress(p.current, p.total),
+    });
+  } finally {
+    bot.quit?.("Desktop app run complete");
+  }
+
+  const outputName = `Jungle pyramids with Y (${new Date().toLocaleString(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+  })})`;
+  const index2 = await loadIndex();
+  const proj2 = index2.projects.find((x) => x.id === projectId);
+  if (!proj2) throw new Error("Project not found");
+  if (!proj2.datasets) proj2.datasets = [];
+  const outputDs = {
+    id: outputId,
+    projectId,
+    type: "jungle_pyramids",
+    role: "output",
+    name: outputName,
+    filePath: outputPath,
+    sourceDatasetId: inputDatasetId,
+    createdAt: new Date().toISOString(),
+  };
+  proj2.datasets.push(outputDs);
+  proj2.updatedAt = new Date().toISOString();
+  await saveIndex(index2);
+  return outputDs;
+});

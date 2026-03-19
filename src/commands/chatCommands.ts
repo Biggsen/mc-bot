@@ -6,6 +6,7 @@ import { log } from "../utils/logger.js";
 const MAX_CHAT_LENGTH = 256;
 
 let villageRecorderRunning = false;
+let junglePyramidsRecorderRunning = false;
 
 function sendLong(bot: Bot, text: string): void {
   if (text.length <= MAX_CHAT_LENGTH) {
@@ -32,8 +33,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     const trimmed = message.trim().toLowerCase();
 
     if (trimmed === "startvillages") {
-      if (villageRecorderRunning) {
-        bot.chat("Village recorder already running.");
+      if (villageRecorderRunning || junglePyramidsRecorderRunning) {
+        bot.chat("A recorder is already running.");
         return;
       }
       if (!config.villageRecorder) {
@@ -54,6 +55,33 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         })
         .finally(() => {
           villageRecorderRunning = false;
+        });
+      return;
+    }
+
+    if (trimmed === "startjunglepyramids") {
+      if (villageRecorderRunning || junglePyramidsRecorderRunning) {
+        bot.chat("A recorder is already running.");
+        return;
+      }
+      if (!config.junglePyramidsRecorder) {
+        bot.chat(
+          "Jungle pyramids recorder not configured. Set JUNGLE_PYRAMIDS_CSV_PATH and JUNGLE_PYRAMIDS_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      junglePyramidsRecorderRunning = true;
+      bot.chat("Starting jungle pyramids Y recorder...");
+      runVillageRecorder(bot, config.junglePyramidsRecorder)
+        .then(() => {
+          bot.chat("Jungle pyramids recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Jungle pyramids recorder error: %s", (err as Error).message);
+          bot.chat("Jungle pyramids recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          junglePyramidsRecorderRunning = false;
         });
       return;
     }
@@ -116,7 +144,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
     if (trimmed === "help" || trimmed === "commands") {
       bot.chat(
-        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, help"
+        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, help"
       );
       return;
     }

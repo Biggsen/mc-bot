@@ -1,6 +1,35 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 
+const KNOWN_STRUCTURE_TYPES = ["villages", "jungle_pyramids"];
+
+const STRUCTURE_LABELS = {
+  villages: "Villages",
+  jungle_pyramids: "Jungle Pyramids",
+};
+
+const STRUCTURE_RECORDER_CONFIG = {
+  villages: {
+    heading: "Run Village Y recorder",
+    selectPlaceholder: "Select villages input…",
+    runLabel: "Run Village Y recorder",
+    progressLabel: "Village",
+    run: (mcBot, opts) => mcBot.recorder.runVillageY(opts),
+  },
+  jungle_pyramids: {
+    heading: "Run Jungle Pyramids Y recorder",
+    selectPlaceholder: "Select jungle pyramids input…",
+    runLabel: "Run Jungle Pyramids recorder",
+    progressLabel: "Jungle pyramids",
+    run: (mcBot, opts) => mcBot.recorder.runJunglePyramids(opts),
+  },
+};
+
+function getStructureLabel(type) {
+  if (!type) return "Unknown";
+  return STRUCTURE_LABELS[type] || type.replace(/_/g, " ");
+}
+
 function sanitizeFileSegment(s) {
   return String(s || "unknown")
     .toLowerCase()
@@ -39,9 +68,11 @@ export default function ProjectView() {
   const [host, setHost] = useState("");
   const [port, setPort] = useState("25565");
   const [username, setUsername] = useState("");
+  const [selectedType, setSelectedType] = useState("villages");
   const [runInputId, setRunInputId] = useState("");
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(null);
+  const [progressType, setProgressType] = useState("villages");
   const [error, setError] = useState(null);
   const [previewContent, setPreviewContent] = useState(null);
   const [previewPath, setPreviewPath] = useState(null);
@@ -86,6 +117,12 @@ export default function ProjectView() {
     return unsub;
   }, [projectId]);
 
+  useEffect(() => {
+    setRunInputId("");
+    setProgress(null);
+    setError(null);
+  }, [selectedType]);
+
   async function handleSaveConnection(e) {
     e.preventDefault();
     if (!window.mcBot || !project) return;
@@ -114,11 +151,10 @@ export default function ProjectView() {
     const filePath = await window.mcBot.dialog.openCsv();
     if (!filePath) return;
     const nameFromPath = filePath.split(/[/\\]/).pop()?.replace(/\.csv$/i, "") ?? "Input";
-    const type = "villages";
     try {
       await window.mcBot.datasets.addInput({
         projectId,
-        type,
+        type: selectedType,
         name: nameFromPath,
         filePath,
       });
@@ -168,17 +204,19 @@ export default function ProjectView() {
         sourcePath: dataset.filePath,
         defaultFileName,
       });
-      if (!result.canceled && result.filePath) {
-        await window.mcBot.shell.showItemInFolder(result.filePath);
-      }
     } catch (err) {
       alert(err.message || "Failed to save file");
     }
   }
 
-  async function handleRunVillageY(e) {
+  async function handleRunRecorder(e) {
     e.preventDefault();
     if (!window.mcBot || !projectId || !runInputId) return;
+    const recorderConfig = STRUCTURE_RECORDER_CONFIG[selectedType];
+    if (!recorderConfig) {
+      setError(`No recorder wired yet for ${getStructureLabel(selectedType)}.`);
+      return;
+    }
     const conn = project?.connection;
     if (!conn?.host || !conn?.port || !conn?.username) {
       setError("Set connection (host, port, username) first.");
@@ -186,9 +224,10 @@ export default function ProjectView() {
     }
     setError(null);
     setRunning(true);
+    setProgressType(selectedType);
     setProgress(null);
     try {
-      await window.mcBot.recorder.runVillageY({
+      await recorderConfig.run(window.mcBot, {
         projectId,
         inputDatasetId: runInputId,
         connection: conn,
@@ -204,7 +243,12 @@ export default function ProjectView() {
 
   const inputs = datasets.filter((d) => d.role === "input");
   const outputs = datasets.filter((d) => d.role === "output");
-  const villageInputs = inputs.filter((d) => d.type === "villages");
+  const structureTypes = Array.from(
+    new Set([...KNOWN_STRUCTURE_TYPES, ...datasets.map((d) => d.type).filter(Boolean)])
+  );
+  const selectedInputs = inputs.filter((d) => d.type === selectedType);
+  const selectedOutputs = outputs.filter((d) => d.type === selectedType);
+  const selectedRecorder = STRUCTURE_RECORDER_CONFIG[selectedType];
 
   if (loading) return <div style={styles.msg}>Loading…</div>;
   if (!project) return <div style={styles.msg}>Project not found.</div>;
@@ -265,12 +309,28 @@ export default function ProjectView() {
       </section>
 
       <section style={styles.section}>
+        <h2 style={styles.h2}>Structure type</h2>
+        <select
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          style={styles.select}
+          disabled={running}
+        >
+          {structureTypes.map((type) => (
+            <option key={type} value={type}>
+              {getStructureLabel(type)}
+            </option>
+          ))}
+        </select>
+      </section>
+
+      <section style={styles.section}>
         <h2 style={styles.h2}>Input datasets</h2>
-        <button type="button" onClick={handleAddInput} style={styles.btn}>
-          Add CSV…
+        <button type="button" onClick={handleAddInput} disabled={running} style={styles.btn}>
+          Add {getStructureLabel(selectedType)} CSV…
         </button>
         <DatasetList
-          items={inputs}
+          items={selectedInputs}
           onRemove={handleRemoveDataset}
           onShowInFolder={handleShowInFolder}
           onPreview={handlePreview}
@@ -281,7 +341,7 @@ export default function ProjectView() {
       <section style={styles.section}>
         <h2 style={styles.h2}>Output datasets</h2>
         <DatasetList
-          items={outputs}
+          items={selectedOutputs}
           onRemove={handleRemoveDataset}
           onShowInFolder={handleShowInFolder}
           onPreview={handlePreview}
@@ -290,32 +350,42 @@ export default function ProjectView() {
       </section>
 
       <section style={styles.section}>
-        <h2 style={styles.h2}>Run Village Y recorder</h2>
-        <form onSubmit={handleRunVillageY} style={styles.runForm}>
-          <select
-            value={runInputId}
-            onChange={(e) => setRunInputId(e.target.value)}
-            style={styles.select}
-            disabled={running}
-          >
-            <option value="">Select villages input…</option>
-            {villageInputs.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name} ({d.type})
-              </option>
-            ))}
-          </select>
-          <button
-            type="submit"
-            disabled={running || !runInputId}
-            style={styles.btn}
-          >
-            {running ? "Running…" : "Run Village Y recorder"}
-          </button>
-        </form>
-        {progress && (
+        <h2 style={styles.h2}>
+          {selectedRecorder
+            ? selectedRecorder.heading
+            : `Run ${getStructureLabel(selectedType)} recorder`}
+        </h2>
+        {selectedRecorder ? (
+          <form onSubmit={handleRunRecorder} style={styles.runForm}>
+            <select
+              value={runInputId}
+              onChange={(e) => setRunInputId(e.target.value)}
+              style={styles.select}
+              disabled={running}
+            >
+              <option value="">{selectedRecorder.selectPlaceholder}</option>
+              {selectedInputs.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name} ({d.type})
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={running || !runInputId}
+              style={styles.btn}
+            >
+              {running && progressType === selectedType ? "Running…" : selectedRecorder.runLabel}
+            </button>
+          </form>
+        ) : (
+          <p style={styles.empty}>
+            No recorder is available for {getStructureLabel(selectedType)} yet.
+          </p>
+        )}
+        {progress && progressType === selectedType && selectedRecorder && (
           <p style={styles.progress}>
-            Village {progress.current}/{progress.total}
+            {selectedRecorder.progressLabel} {progress.current}/{progress.total}
           </p>
         )}
         {error && <p style={styles.error}>{error}</p>}

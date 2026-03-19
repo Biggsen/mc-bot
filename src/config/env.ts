@@ -19,6 +19,7 @@ export interface BotConfig {
   reconnect: boolean;
   reconnectDelayMs: number;
   villageRecorder: VillageRecorderConfig | undefined;
+  junglePyramidsRecorder: VillageRecorderConfig | undefined;
 }
 
 export interface ConnectionOptions {
@@ -43,6 +44,7 @@ export function buildBotConfigFromConnection(
     reconnect: false,
     reconnectDelayMs: 5000,
     villageRecorder: undefined,
+    junglePyramidsRecorder: undefined,
   };
 }
 
@@ -110,6 +112,31 @@ export function loadConfig(): BotConfig {
     };
   }
 
+  const jungleCsvPath = process.env.JUNGLE_PYRAMIDS_CSV_PATH?.trim();
+  const jungleOutputPath = process.env.JUNGLE_PYRAMIDS_OUTPUT_PATH?.trim();
+  let junglePyramidsRecorder: VillageRecorderConfig | undefined;
+  if (jungleCsvPath && jungleOutputPath) {
+    const tpY = parseInt(process.env.JUNGLE_PYRAMIDS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.JUNGLE_PYRAMIDS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.JUNGLE_PYRAMIDS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.JUNGLE_PYRAMIDS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    junglePyramidsRecorder = {
+      csvPath: jungleCsvPath,
+      outputPath: jungleOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+    };
+  }
+
   return {
     host: process.env.MC_HOST!.trim(),
     port: portNum,
@@ -122,5 +149,6 @@ export function loadConfig(): BotConfig {
     reconnect,
     reconnectDelayMs: Number.isNaN(reconnectDelayMs) ? 5000 : reconnectDelayMs,
     villageRecorder,
+    junglePyramidsRecorder,
   };
 }

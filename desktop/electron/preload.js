@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld("mcBot", {
   },
   recorder: {
     runVillageY: (opts) => ipcRenderer.invoke("recorder:runVillageY", opts),
+    runJunglePyramids: (opts) => ipcRenderer.invoke("recorder:runJunglePyramids", opts),
     onProgress: (cb) => {
       const sub = (_e, data) => cb(data);
       ipcRenderer.on("recorder:progress", sub);
