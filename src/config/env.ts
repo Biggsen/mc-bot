@@ -1,3 +1,12 @@
+export interface VillageRecorderConfig {
+  csvPath: string;
+  outputPath: string;
+  tpY: number;
+  delayAfterTpMs: number;
+  waitForGround: boolean;
+  groundTimeoutMs: number;
+}
+
 export interface BotConfig {
   host: string;
   port: number;
@@ -9,6 +18,7 @@ export interface BotConfig {
   viewerPort: number | undefined;
   reconnect: boolean;
   reconnectDelayMs: number;
+  villageRecorder: VillageRecorderConfig | undefined;
 }
 
 const REQUIRED = ["MC_HOST", "MC_PORT", "MC_USERNAME", "MC_AUTH"] as const;
@@ -50,6 +60,31 @@ export function loadConfig(): BotConfig {
     10
   );
 
+  const villageCsvPath = process.env.VILLAGE_CSV_PATH?.trim();
+  const villageOutputPath = process.env.VILLAGE_OUTPUT_PATH?.trim();
+  let villageRecorder: VillageRecorderConfig | undefined;
+  if (villageCsvPath && villageOutputPath) {
+    const tpY = parseInt(process.env.VILLAGE_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.VILLAGE_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.VILLAGE_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.VILLAGE_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    villageRecorder = {
+      csvPath: villageCsvPath,
+      outputPath: villageOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+    };
+  }
+
   return {
     host: process.env.MC_HOST!.trim(),
     port: portNum,
@@ -61,5 +96,6 @@ export function loadConfig(): BotConfig {
     viewerPort: viewerPortValid ? viewerPort : undefined,
     reconnect,
     reconnectDelayMs: Number.isNaN(reconnectDelayMs) ? 5000 : reconnectDelayMs,
+    villageRecorder,
   };
 }

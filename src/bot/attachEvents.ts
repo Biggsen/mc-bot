@@ -12,7 +12,7 @@ export function attachEvents(
   config: BotConfig,
   options: AttachEventsOptions = {}
 ): void {
-  attachChatCommands(bot);
+  attachChatCommands(bot, config);
 
   bot.on("spawn", async () => {
     log("Spawned in world");

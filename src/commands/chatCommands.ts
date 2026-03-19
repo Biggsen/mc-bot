@@ -1,6 +1,11 @@
 import type { Bot } from "mineflayer";
+import type { BotConfig } from "../config/env.js";
+import { runVillageRecorder } from "../features/villageRecorder/index.js";
+import { log } from "../utils/logger.js";
 
 const MAX_CHAT_LENGTH = 256;
+
+let villageRecorderRunning = false;
 
 function sendLong(bot: Bot, text: string): void {
   if (text.length <= MAX_CHAT_LENGTH) {
@@ -20,11 +25,38 @@ function sendLong(bot: Bot, text: string): void {
   if (buf) bot.chat(buf.trimEnd().replace(/,\s*$/, ""));
 }
 
-export function attachChatCommands(bot: Bot): void {
+export function attachChatCommands(bot: Bot, config: BotConfig): void {
   bot.on("chat", (username, message) => {
     if (username === bot.username) return;
 
     const trimmed = message.trim().toLowerCase();
+
+    if (trimmed === "startvillages") {
+      if (villageRecorderRunning) {
+        bot.chat("Village recorder already running.");
+        return;
+      }
+      if (!config.villageRecorder) {
+        bot.chat(
+          "Village recorder not configured. Set VILLAGE_CSV_PATH and VILLAGE_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      villageRecorderRunning = true;
+      bot.chat("Starting village Y recorder...");
+      runVillageRecorder(bot, config.villageRecorder)
+        .then(() => {
+          bot.chat("Village recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Village recorder error: %s", (err as Error).message);
+          bot.chat("Village recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          villageRecorderRunning = false;
+        });
+      return;
+    }
 
     if (trimmed === "ping") {
       bot.chat("pong");
@@ -84,7 +116,7 @@ export function attachChatCommands(bot: Bot): void {
     }
     if (trimmed === "help" || trimmed === "commands") {
       bot.chat(
-        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, help"
+        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, help"
       );
       return;
     }
