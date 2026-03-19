@@ -17,6 +17,37 @@ function formatRow(header: string[], row: Record<string, string>, sep: string): 
   return header.map((h) => row[h] ?? "").join(sep);
 }
 
+function lowerHeader(h: string): string {
+  return h.trim().toLowerCase();
+}
+
+/** Inserts y after x; columns that sat between x and z stay between y and z (e.g. Name,X,Foo,Z → Name,X,Y,Foo,Z). */
+function buildOutputHeader(parsed: ParsedCsv): { outHeader: string[]; yKey: string } {
+  const orig = parsed.header;
+  const yKey = orig.find((h) => lowerHeader(h) === "y") ?? "y";
+  const withoutY = orig.filter((h) => lowerHeader(h) !== "y");
+
+  const xIdx = withoutY.findIndex((h) => lowerHeader(h) === "x");
+  const zIdx = withoutY.findIndex((h) => lowerHeader(h) === "z");
+  if (xIdx < 0 || zIdx < 0) {
+    const outHeader = [...withoutY];
+    if (!outHeader.some((h) => lowerHeader(h) === "y")) {
+      outHeader.push(yKey);
+    }
+    return { outHeader, yKey };
+  }
+
+  const xH = withoutY[xIdx];
+  const zH = withoutY[zIdx];
+  const low = Math.min(xIdx, zIdx);
+  const high = Math.max(xIdx, zIdx);
+  const left = withoutY.slice(0, low);
+  const mid = withoutY.slice(low + 1, high);
+  const right = withoutY.slice(high + 1);
+  const outHeader = [...left, xH, yKey, ...mid, zH, ...right];
+  return { outHeader, yKey };
+}
+
 function writeOutput(
   parsed: ParsedCsv,
   results: { row: Record<string, string>; y: number }[],
@@ -26,13 +57,9 @@ function writeOutput(
   for (const line of parsed.commentLines) {
     lines.push(line);
   }
-  const outHeader = [...parsed.header];
-  if (!outHeader.some((h) => h.toLowerCase() === "y")) {
-    outHeader.push("y");
-  }
+  const { outHeader, yKey } = buildOutputHeader(parsed);
   lines.push(outHeader.join(parsed.separator));
 
-  const yKey = outHeader.find((h) => h.toLowerCase() === "y") ?? "y";
   for (const { row, y } of results) {
     const outRow = { ...row, [yKey]: String(Math.floor(y)) };
     lines.push(formatRow(outHeader, outRow, parsed.separator));
@@ -44,9 +71,15 @@ function writeOutput(
 
 const MODE_SWITCH_DELAY_MS = 1500;
 
+export interface VillageRecorderProgress {
+  current: number;
+  total: number;
+}
+
 export async function runVillageRecorder(
   bot: Bot,
-  config: VillageRecorderConfig
+  config: VillageRecorderConfig,
+  options?: { onProgress?: (progress: VillageRecorderProgress) => void }
 ): Promise<void> {
   const parsed = parseVillagesCsv(config.csvPath);
   if (parsed.rows.length === 0) {
@@ -116,7 +149,10 @@ export async function runVillageRecorder(
 
       const y = bot.entity.position.y;
       results.push({ row, y });
-      log("Village %d/%d: %d, %d → y=%d", i + 1, parsed.rows.length, x, z, Math.floor(y));
+      const current = i + 1;
+      const total = parsed.rows.length;
+      options?.onProgress?.({ current, total });
+      log("Village %d/%d: %d, %d → y=%d", current, total, x, z, Math.floor(y));
     }
 
     writeOutput(parsed, results, config.outputPath);

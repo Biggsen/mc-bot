@@ -4,6 +4,10 @@
   "description": "mc-bot project",
   "type": "module",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./lib": "./dist/lib.js"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

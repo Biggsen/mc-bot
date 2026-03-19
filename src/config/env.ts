@@ -21,6 +21,31 @@ export interface BotConfig {
   villageRecorder: VillageRecorderConfig | undefined;
 }
 
+export interface ConnectionOptions {
+  host: string;
+  port: number;
+  username: string;
+  version?: string;
+}
+
+export function buildBotConfigFromConnection(
+  connection: ConnectionOptions
+): BotConfig {
+  return {
+    host: connection.host,
+    port: connection.port,
+    username: connection.username,
+    version: connection.version,
+    auth: "offline",
+    chatOnSpawn: undefined,
+    gamemodeOnSpawn: "creative",
+    viewerPort: undefined,
+    reconnect: false,
+    reconnectDelayMs: 5000,
+    villageRecorder: undefined,
+  };
+}
+
 const REQUIRED = ["MC_HOST", "MC_PORT", "MC_USERNAME", "MC_AUTH"] as const;
 
 export function loadConfig(): BotConfig {
