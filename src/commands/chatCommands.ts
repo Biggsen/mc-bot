@@ -10,6 +10,7 @@ let junglePyramidsRecorderRunning = false;
 let desertWellsRecorderRunning = false;
 let desertPyramidsRecorderRunning = false;
 let pillagerOutpostsRecorderRunning = false;
+let igloosRecorderRunning = false;
 
 function sendLong(bot: Bot, text: string): void {
   if (text.length <= MAX_CHAT_LENGTH) {
@@ -41,7 +42,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         junglePyramidsRecorderRunning ||
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning
+        pillagerOutpostsRecorderRunning ||
+        igloosRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -74,7 +76,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         junglePyramidsRecorderRunning ||
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning
+        pillagerOutpostsRecorderRunning ||
+        igloosRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -107,7 +110,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         junglePyramidsRecorderRunning ||
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning
+        pillagerOutpostsRecorderRunning ||
+        igloosRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -140,7 +144,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         junglePyramidsRecorderRunning ||
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning
+        pillagerOutpostsRecorderRunning ||
+        igloosRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -173,7 +178,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         junglePyramidsRecorderRunning ||
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning
+        pillagerOutpostsRecorderRunning ||
+        igloosRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -196,6 +202,40 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         })
         .finally(() => {
           pillagerOutpostsRecorderRunning = false;
+        });
+      return;
+    }
+
+    if (trimmed === "startigloos") {
+      if (
+        villageRecorderRunning ||
+        junglePyramidsRecorderRunning ||
+        desertWellsRecorderRunning ||
+        desertPyramidsRecorderRunning ||
+        pillagerOutpostsRecorderRunning ||
+        igloosRecorderRunning
+      ) {
+        bot.chat("A recorder is already running.");
+        return;
+      }
+      if (!config.igloosRecorder) {
+        bot.chat(
+          "Igloos recorder not configured. Set IGLOOS_CSV_PATH and IGLOOS_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      igloosRecorderRunning = true;
+      bot.chat("Starting igloos Y recorder...");
+      runVillageRecorder(bot, config.igloosRecorder)
+        .then(() => {
+          bot.chat("Igloos recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Igloos recorder error: %s", (err as Error).message);
+          bot.chat("Igloos recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          igloosRecorderRunning = false;
         });
       return;
     }
@@ -258,7 +298,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
     if (trimmed === "help" || trimmed === "commands") {
       bot.chat(
-        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, help"
+        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, startigloos, help"
       );
       return;
     }

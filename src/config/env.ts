@@ -25,6 +25,7 @@ export interface BotConfig {
   desertWellsRecorder: VillageRecorderConfig | undefined;
   desertPyramidsRecorder: VillageRecorderConfig | undefined;
   pillagerOutpostsRecorder: VillageRecorderConfig | undefined;
+  igloosRecorder: VillageRecorderConfig | undefined;
 }
 
 export interface ConnectionOptions {
@@ -53,6 +54,7 @@ export function buildBotConfigFromConnection(
     desertWellsRecorder: undefined,
     desertPyramidsRecorder: undefined,
     pillagerOutpostsRecorder: undefined,
+    igloosRecorder: undefined,
   };
 }
 
@@ -224,6 +226,32 @@ export function loadConfig(): BotConfig {
     };
   }
 
+  const igloosCsvPath = process.env.IGLOOS_CSV_PATH?.trim();
+  const igloosOutputPath = process.env.IGLOOS_OUTPUT_PATH?.trim();
+  let igloosRecorder: VillageRecorderConfig | undefined;
+  if (igloosCsvPath && igloosOutputPath) {
+    const tpY = parseInt(process.env.IGLOOS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.IGLOOS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.IGLOOS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.IGLOOS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    igloosRecorder = {
+      csvPath: igloosCsvPath,
+      outputPath: igloosOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Igloo",
+    };
+  }
+
   return {
     host: process.env.MC_HOST!.trim(),
     port: portNum,
@@ -240,5 +268,6 @@ export function loadConfig(): BotConfig {
     desertWellsRecorder,
     desertPyramidsRecorder,
     pillagerOutpostsRecorder,
+    igloosRecorder,
   };
 }
