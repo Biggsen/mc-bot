@@ -1,11 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 
-const KNOWN_STRUCTURE_TYPES = ["villages", "jungle_pyramids"];
+const KNOWN_STRUCTURE_TYPES = [
+  "villages",
+  "jungle_pyramids",
+  "desert_wells",
+  "desert_pyramids",
+  "pillager_outposts",
+];
 
 const STRUCTURE_LABELS = {
   villages: "Villages",
   jungle_pyramids: "Jungle Pyramids",
+  desert_wells: "Desert Wells",
+  desert_pyramids: "Desert Pyramids",
+  pillager_outposts: "Pillager Outposts",
 };
 
 const STRUCTURE_RECORDER_CONFIG = {
@@ -22,6 +31,27 @@ const STRUCTURE_RECORDER_CONFIG = {
     runLabel: "Run Jungle Pyramids recorder",
     progressLabel: "Jungle pyramids",
     run: (mcBot, opts) => mcBot.recorder.runJunglePyramids(opts),
+  },
+  desert_wells: {
+    heading: "Run Desert Wells Y recorder",
+    selectPlaceholder: "Select desert wells input…",
+    runLabel: "Run Desert Wells recorder",
+    progressLabel: "Desert wells",
+    run: (mcBot, opts) => mcBot.recorder.runDesertWells(opts),
+  },
+  desert_pyramids: {
+    heading: "Run Desert Pyramids Y recorder",
+    selectPlaceholder: "Select desert pyramids input…",
+    runLabel: "Run Desert Pyramids recorder",
+    progressLabel: "Desert pyramids",
+    run: (mcBot, opts) => mcBot.recorder.runDesertPyramids(opts),
+  },
+  pillager_outposts: {
+    heading: "Run Pillager Outposts Y recorder",
+    selectPlaceholder: "Select pillager outposts input…",
+    runLabel: "Run Pillager Outposts recorder",
+    progressLabel: "Pillager outposts",
+    run: (mcBot, opts) => mcBot.recorder.runPillagerOutposts(opts),
   },
 };
 

@@ -7,6 +7,9 @@ const MAX_CHAT_LENGTH = 256;
 
 let villageRecorderRunning = false;
 let junglePyramidsRecorderRunning = false;
+let desertWellsRecorderRunning = false;
+let desertPyramidsRecorderRunning = false;
+let pillagerOutpostsRecorderRunning = false;
 
 function sendLong(bot: Bot, text: string): void {
   if (text.length <= MAX_CHAT_LENGTH) {
@@ -33,7 +36,13 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     const trimmed = message.trim().toLowerCase();
 
     if (trimmed === "startvillages") {
-      if (villageRecorderRunning || junglePyramidsRecorderRunning) {
+      if (
+        villageRecorderRunning ||
+        junglePyramidsRecorderRunning ||
+        desertWellsRecorderRunning ||
+        desertPyramidsRecorderRunning ||
+        pillagerOutpostsRecorderRunning
+      ) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -60,7 +69,13 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "startjunglepyramids") {
-      if (villageRecorderRunning || junglePyramidsRecorderRunning) {
+      if (
+        villageRecorderRunning ||
+        junglePyramidsRecorderRunning ||
+        desertWellsRecorderRunning ||
+        desertPyramidsRecorderRunning ||
+        pillagerOutpostsRecorderRunning
+      ) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -82,6 +97,105 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         })
         .finally(() => {
           junglePyramidsRecorderRunning = false;
+        });
+      return;
+    }
+
+    if (trimmed === "startdesertwells") {
+      if (
+        villageRecorderRunning ||
+        junglePyramidsRecorderRunning ||
+        desertWellsRecorderRunning ||
+        desertPyramidsRecorderRunning ||
+        pillagerOutpostsRecorderRunning
+      ) {
+        bot.chat("A recorder is already running.");
+        return;
+      }
+      if (!config.desertWellsRecorder) {
+        bot.chat(
+          "Desert wells recorder not configured. Set DESERT_WELLS_CSV_PATH and DESERT_WELLS_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      desertWellsRecorderRunning = true;
+      bot.chat("Starting desert wells Y recorder...");
+      runVillageRecorder(bot, config.desertWellsRecorder)
+        .then(() => {
+          bot.chat("Desert wells recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Desert wells recorder error: %s", (err as Error).message);
+          bot.chat("Desert wells recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          desertWellsRecorderRunning = false;
+        });
+      return;
+    }
+
+    if (trimmed === "startdesertpyramids") {
+      if (
+        villageRecorderRunning ||
+        junglePyramidsRecorderRunning ||
+        desertWellsRecorderRunning ||
+        desertPyramidsRecorderRunning ||
+        pillagerOutpostsRecorderRunning
+      ) {
+        bot.chat("A recorder is already running.");
+        return;
+      }
+      if (!config.desertPyramidsRecorder) {
+        bot.chat(
+          "Desert pyramids recorder not configured. Set DESERT_PYRAMIDS_CSV_PATH and DESERT_PYRAMIDS_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      desertPyramidsRecorderRunning = true;
+      bot.chat("Starting desert pyramids Y recorder...");
+      runVillageRecorder(bot, config.desertPyramidsRecorder)
+        .then(() => {
+          bot.chat("Desert pyramids recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Desert pyramids recorder error: %s", (err as Error).message);
+          bot.chat("Desert pyramids recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          desertPyramidsRecorderRunning = false;
+        });
+      return;
+    }
+
+    if (trimmed === "startpillageroutposts") {
+      if (
+        villageRecorderRunning ||
+        junglePyramidsRecorderRunning ||
+        desertWellsRecorderRunning ||
+        desertPyramidsRecorderRunning ||
+        pillagerOutpostsRecorderRunning
+      ) {
+        bot.chat("A recorder is already running.");
+        return;
+      }
+      if (!config.pillagerOutpostsRecorder) {
+        bot.chat(
+          "Pillager outposts recorder not configured. Set PILLAGER_OUTPOSTS_CSV_PATH and PILLAGER_OUTPOSTS_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      pillagerOutpostsRecorderRunning = true;
+      bot.chat("Starting pillager outposts Y recorder...");
+      runVillageRecorder(bot, config.pillagerOutpostsRecorder)
+        .then(() => {
+          bot.chat("Pillager outposts recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Pillager outposts recorder error: %s", (err as Error).message);
+          bot.chat("Pillager outposts recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          pillagerOutpostsRecorderRunning = false;
         });
       return;
     }
@@ -144,7 +258,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
     if (trimmed === "help" || trimmed === "commands") {
       bot.chat(
-        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, help"
+        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, help"
       );
       return;
     }

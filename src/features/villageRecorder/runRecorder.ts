@@ -99,9 +99,10 @@ export async function runVillageRecorder(
   options?: { onProgress?: (progress: VillageRecorderProgress) => void; signal?: AbortSignal }
 ): Promise<void> {
   throwIfAborted(options?.signal);
+  const label = config.logLabel ?? "Village";
   const parsed = parseVillagesCsv(config.csvPath);
   if (parsed.rows.length === 0) {
-    log("No village rows to process");
+    log("No rows to process (%s)", label);
     writeOutput(parsed, [], config.outputPath);
     return;
   }
@@ -125,7 +126,7 @@ export async function runVillageRecorder(
       try {
         bot.chat(`/tp @s ${x} ${config.tpY} ${z}`);
       } catch (e) {
-        error("TP failed for village %d (%d, %d): %s", i + 1, x, z, (e as Error).message);
+        error("TP failed for %s %d (%d, %d): %s", label, i + 1, x, z, (e as Error).message);
         continue;
       }
 
@@ -158,7 +159,8 @@ export async function runVillageRecorder(
         }
         if (stableTicks < requiredStable) {
           error(
-            "Timeout waiting for ground at village %d (%d, %d), using current Y",
+            "Timeout waiting for ground at %s %d (%d, %d), using current Y",
+            label,
             i + 1,
             x,
             z
@@ -171,7 +173,7 @@ export async function runVillageRecorder(
       const current = i + 1;
       const total = parsed.rows.length;
       options?.onProgress?.({ current, total });
-      log("Village %d/%d: %d, %d → y=%d", current, total, x, z, Math.floor(y));
+      log("%s %d/%d: %d, %d → y=%d", label, current, total, x, z, Math.floor(y));
     }
 
     writeOutput(parsed, results, config.outputPath);

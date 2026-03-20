@@ -5,6 +5,8 @@ export interface VillageRecorderConfig {
   delayAfterTpMs: number;
   waitForGround: boolean;
   groundTimeoutMs: number;
+  /** Console log prefix, e.g. "Village", "Desert well". Default "Village". */
+  logLabel?: string;
 }
 
 export interface BotConfig {
@@ -20,6 +22,9 @@ export interface BotConfig {
   reconnectDelayMs: number;
   villageRecorder: VillageRecorderConfig | undefined;
   junglePyramidsRecorder: VillageRecorderConfig | undefined;
+  desertWellsRecorder: VillageRecorderConfig | undefined;
+  desertPyramidsRecorder: VillageRecorderConfig | undefined;
+  pillagerOutpostsRecorder: VillageRecorderConfig | undefined;
 }
 
 export interface ConnectionOptions {
@@ -45,6 +50,9 @@ export function buildBotConfigFromConnection(
     reconnectDelayMs: 5000,
     villageRecorder: undefined,
     junglePyramidsRecorder: undefined,
+    desertWellsRecorder: undefined,
+    desertPyramidsRecorder: undefined,
+    pillagerOutpostsRecorder: undefined,
   };
 }
 
@@ -134,6 +142,85 @@ export function loadConfig(): BotConfig {
       delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
       waitForGround,
       groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Jungle pyramid",
+    };
+  }
+
+  const desertWellsCsvPath = process.env.DESERT_WELLS_CSV_PATH?.trim();
+  const desertWellsOutputPath = process.env.DESERT_WELLS_OUTPUT_PATH?.trim();
+  let desertWellsRecorder: VillageRecorderConfig | undefined;
+  if (desertWellsCsvPath && desertWellsOutputPath) {
+    const tpY = parseInt(process.env.DESERT_WELLS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.DESERT_WELLS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.DESERT_WELLS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.DESERT_WELLS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    desertWellsRecorder = {
+      csvPath: desertWellsCsvPath,
+      outputPath: desertWellsOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Desert well",
+    };
+  }
+
+  const desertPyramidsCsvPath = process.env.DESERT_PYRAMIDS_CSV_PATH?.trim();
+  const desertPyramidsOutputPath = process.env.DESERT_PYRAMIDS_OUTPUT_PATH?.trim();
+  let desertPyramidsRecorder: VillageRecorderConfig | undefined;
+  if (desertPyramidsCsvPath && desertPyramidsOutputPath) {
+    const tpY = parseInt(process.env.DESERT_PYRAMIDS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.DESERT_PYRAMIDS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.DESERT_PYRAMIDS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.DESERT_PYRAMIDS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    desertPyramidsRecorder = {
+      csvPath: desertPyramidsCsvPath,
+      outputPath: desertPyramidsOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Desert pyramid",
+    };
+  }
+
+  const pillagerOutpostsCsvPath = process.env.PILLAGER_OUTPOSTS_CSV_PATH?.trim();
+  const pillagerOutpostsOutputPath = process.env.PILLAGER_OUTPOSTS_OUTPUT_PATH?.trim();
+  let pillagerOutpostsRecorder: VillageRecorderConfig | undefined;
+  if (pillagerOutpostsCsvPath && pillagerOutpostsOutputPath) {
+    const tpY = parseInt(process.env.PILLAGER_OUTPOSTS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.PILLAGER_OUTPOSTS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.PILLAGER_OUTPOSTS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.PILLAGER_OUTPOSTS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    pillagerOutpostsRecorder = {
+      csvPath: pillagerOutpostsCsvPath,
+      outputPath: pillagerOutpostsOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Pillager outpost",
     };
   }
 
@@ -150,5 +237,8 @@ export function loadConfig(): BotConfig {
     reconnectDelayMs: Number.isNaN(reconnectDelayMs) ? 5000 : reconnectDelayMs,
     villageRecorder,
     junglePyramidsRecorder,
+    desertWellsRecorder,
+    desertPyramidsRecorder,
+    pillagerOutpostsRecorder,
   };
 }

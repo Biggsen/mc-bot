@@ -388,6 +388,7 @@ ipcMain.handle("recorder:runJunglePyramids", async (event, { projectId, inputDat
     delayAfterTpMs: 500,
     waitForGround: true,
     groundTimeoutMs: 15000,
+    logLabel: "Jungle pyramid",
   };
 
   try {
@@ -414,6 +415,273 @@ ipcMain.handle("recorder:runJunglePyramids", async (event, { projectId, inputDat
     id: outputId,
     projectId,
     type: "jungle_pyramids",
+    role: "output",
+    name: outputName,
+    filePath: outputPath,
+    sourceDatasetId: inputDatasetId,
+    createdAt: new Date().toISOString(),
+  };
+  proj2.datasets.push(outputDs);
+  proj2.updatedAt = new Date().toISOString();
+  await saveIndex(index2);
+  return outputDs;
+});
+
+ipcMain.handle("recorder:runDesertWells", async (event, { projectId, inputDatasetId, connection }) => {
+  if (activeRecorderRun) {
+    throw new Error("A recorder run is already in progress");
+  }
+  const index = await loadIndex();
+  const project = index.projects.find((x) => x.id === projectId);
+  if (!project) throw new Error("Project not found");
+  const inputDs = (project.datasets || []).find((d) => d.id === inputDatasetId && d.role === "input");
+  if (!inputDs) throw new Error("Input dataset not found");
+  if (!connection || !connection.host || !connection.port || !connection.username) {
+    throw new Error("Project connection (host, port, username) is required");
+  }
+  const projectDir = join(getProjectsPath(), projectId);
+  const outputId = `output-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const outputPath = join(projectDir, `${outputId}.csv`);
+
+  const sendProgress = (current, total) => {
+    event.sender.send("recorder:progress", { current, total });
+  };
+
+  const { createBot } = await import("mc-bot/lib");
+  const { attachEvents } = await import("mc-bot/lib");
+  const { runVillageRecorder } = await import("mc-bot/lib");
+  const { buildBotConfigFromConnection } = await import("mc-bot/lib");
+
+  const botConfig = buildBotConfigFromConnection({
+    host: connection.host,
+    port: Number(connection.port),
+    username: connection.username,
+    version: connection.version || undefined,
+  });
+  const bot = createBot(botConfig);
+  const controller = new AbortController();
+  activeRecorderRun = { type: "desert_wells", bot, controller };
+  attachEvents(bot, botConfig, { onEnd: () => {} });
+
+  await new Promise((resolve, reject) => {
+    bot.once("spawn", resolve);
+    bot.once("error", reject);
+    bot.once("kicked", (reason) => reject(new Error(String(reason))));
+    bot.once("end", (reason) => reject(new Error("Disconnected: " + (reason || "unknown"))));
+  });
+
+  const recorderConfig = {
+    csvPath: inputDs.filePath,
+    outputPath,
+    tpY: 200,
+    delayAfterTpMs: 500,
+    waitForGround: true,
+    groundTimeoutMs: 15000,
+    logLabel: "Desert well",
+  };
+
+  try {
+    await runVillageRecorder(bot, recorderConfig, {
+      onProgress: (p) => sendProgress(p.current, p.total),
+      signal: controller.signal,
+    });
+  } finally {
+    bot.quit?.("Desktop app run complete");
+    if (activeRecorderRun?.bot === bot) {
+      activeRecorderRun = null;
+    }
+  }
+
+  const outputName = `Desert wells with Y (${new Date().toLocaleString(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+  })})`;
+  const index2 = await loadIndex();
+  const proj2 = index2.projects.find((x) => x.id === projectId);
+  if (!proj2) throw new Error("Project not found");
+  if (!proj2.datasets) proj2.datasets = [];
+  const outputDs = {
+    id: outputId,
+    projectId,
+    type: "desert_wells",
+    role: "output",
+    name: outputName,
+    filePath: outputPath,
+    sourceDatasetId: inputDatasetId,
+    createdAt: new Date().toISOString(),
+  };
+  proj2.datasets.push(outputDs);
+  proj2.updatedAt = new Date().toISOString();
+  await saveIndex(index2);
+  return outputDs;
+});
+
+ipcMain.handle("recorder:runDesertPyramids", async (event, { projectId, inputDatasetId, connection }) => {
+  if (activeRecorderRun) {
+    throw new Error("A recorder run is already in progress");
+  }
+  const index = await loadIndex();
+  const project = index.projects.find((x) => x.id === projectId);
+  if (!project) throw new Error("Project not found");
+  const inputDs = (project.datasets || []).find((d) => d.id === inputDatasetId && d.role === "input");
+  if (!inputDs) throw new Error("Input dataset not found");
+  if (!connection || !connection.host || !connection.port || !connection.username) {
+    throw new Error("Project connection (host, port, username) is required");
+  }
+  const projectDir = join(getProjectsPath(), projectId);
+  const outputId = `output-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const outputPath = join(projectDir, `${outputId}.csv`);
+
+  const sendProgress = (current, total) => {
+    event.sender.send("recorder:progress", { current, total });
+  };
+
+  const { createBot } = await import("mc-bot/lib");
+  const { attachEvents } = await import("mc-bot/lib");
+  const { runVillageRecorder } = await import("mc-bot/lib");
+  const { buildBotConfigFromConnection } = await import("mc-bot/lib");
+
+  const botConfig = buildBotConfigFromConnection({
+    host: connection.host,
+    port: Number(connection.port),
+    username: connection.username,
+    version: connection.version || undefined,
+  });
+  const bot = createBot(botConfig);
+  const controller = new AbortController();
+  activeRecorderRun = { type: "desert_pyramids", bot, controller };
+  attachEvents(bot, botConfig, { onEnd: () => {} });
+
+  await new Promise((resolve, reject) => {
+    bot.once("spawn", resolve);
+    bot.once("error", reject);
+    bot.once("kicked", (reason) => reject(new Error(String(reason))));
+    bot.once("end", (reason) => reject(new Error("Disconnected: " + (reason || "unknown"))));
+  });
+
+  const recorderConfig = {
+    csvPath: inputDs.filePath,
+    outputPath,
+    tpY: 200,
+    delayAfterTpMs: 500,
+    waitForGround: true,
+    groundTimeoutMs: 15000,
+    logLabel: "Desert pyramid",
+  };
+
+  try {
+    await runVillageRecorder(bot, recorderConfig, {
+      onProgress: (p) => sendProgress(p.current, p.total),
+      signal: controller.signal,
+    });
+  } finally {
+    bot.quit?.("Desktop app run complete");
+    if (activeRecorderRun?.bot === bot) {
+      activeRecorderRun = null;
+    }
+  }
+
+  const outputName = `Desert pyramids with Y (${new Date().toLocaleString(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+  })})`;
+  const index2 = await loadIndex();
+  const proj2 = index2.projects.find((x) => x.id === projectId);
+  if (!proj2) throw new Error("Project not found");
+  if (!proj2.datasets) proj2.datasets = [];
+  const outputDs = {
+    id: outputId,
+    projectId,
+    type: "desert_pyramids",
+    role: "output",
+    name: outputName,
+    filePath: outputPath,
+    sourceDatasetId: inputDatasetId,
+    createdAt: new Date().toISOString(),
+  };
+  proj2.datasets.push(outputDs);
+  proj2.updatedAt = new Date().toISOString();
+  await saveIndex(index2);
+  return outputDs;
+});
+
+ipcMain.handle("recorder:runPillagerOutposts", async (event, { projectId, inputDatasetId, connection }) => {
+  if (activeRecorderRun) {
+    throw new Error("A recorder run is already in progress");
+  }
+  const index = await loadIndex();
+  const project = index.projects.find((x) => x.id === projectId);
+  if (!project) throw new Error("Project not found");
+  const inputDs = (project.datasets || []).find((d) => d.id === inputDatasetId && d.role === "input");
+  if (!inputDs) throw new Error("Input dataset not found");
+  if (!connection || !connection.host || !connection.port || !connection.username) {
+    throw new Error("Project connection (host, port, username) is required");
+  }
+  const projectDir = join(getProjectsPath(), projectId);
+  const outputId = `output-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const outputPath = join(projectDir, `${outputId}.csv`);
+
+  const sendProgress = (current, total) => {
+    event.sender.send("recorder:progress", { current, total });
+  };
+
+  const { createBot } = await import("mc-bot/lib");
+  const { attachEvents } = await import("mc-bot/lib");
+  const { runVillageRecorder } = await import("mc-bot/lib");
+  const { buildBotConfigFromConnection } = await import("mc-bot/lib");
+
+  const botConfig = buildBotConfigFromConnection({
+    host: connection.host,
+    port: Number(connection.port),
+    username: connection.username,
+    version: connection.version || undefined,
+  });
+  const bot = createBot(botConfig);
+  const controller = new AbortController();
+  activeRecorderRun = { type: "pillager_outposts", bot, controller };
+  attachEvents(bot, botConfig, { onEnd: () => {} });
+
+  await new Promise((resolve, reject) => {
+    bot.once("spawn", resolve);
+    bot.once("error", reject);
+    bot.once("kicked", (reason) => reject(new Error(String(reason))));
+    bot.once("end", (reason) => reject(new Error("Disconnected: " + (reason || "unknown"))));
+  });
+
+  const recorderConfig = {
+    csvPath: inputDs.filePath,
+    outputPath,
+    tpY: 200,
+    delayAfterTpMs: 500,
+    waitForGround: true,
+    groundTimeoutMs: 15000,
+    logLabel: "Pillager outpost",
+  };
+
+  try {
+    await runVillageRecorder(bot, recorderConfig, {
+      onProgress: (p) => sendProgress(p.current, p.total),
+      signal: controller.signal,
+    });
+  } finally {
+    bot.quit?.("Desktop app run complete");
+    if (activeRecorderRun?.bot === bot) {
+      activeRecorderRun = null;
+    }
+  }
+
+  const outputName = `Pillager outposts with Y (${new Date().toLocaleString(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+  })})`;
+  const index2 = await loadIndex();
+  const proj2 = index2.projects.find((x) => x.id === projectId);
+  if (!proj2) throw new Error("Project not found");
+  if (!proj2.datasets) proj2.datasets = [];
+  const outputDs = {
+    id: outputId,
+    projectId,
+    type: "pillager_outposts",
     role: "output",
     name: outputName,
     filePath: outputPath,

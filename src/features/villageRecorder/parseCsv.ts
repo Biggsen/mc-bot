@@ -77,6 +77,6 @@ export function parseVillagesCsv(filePath: string): ParsedCsv {
     rows.push(row);
   }
 
-  log("Parsed %d village rows from %s", rows.length, filePath);
+  log("Parsed %d rows from %s", rows.length, filePath);
   return { commentLines, header, separator, rows };
 }
