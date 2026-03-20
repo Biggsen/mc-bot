@@ -71,6 +71,7 @@ export default function ProjectView() {
   const [selectedType, setSelectedType] = useState("villages");
   const [runInputId, setRunInputId] = useState("");
   const [running, setRunning] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [progress, setProgress] = useState(null);
   const [progressType, setProgressType] = useState("villages");
   const [error, setError] = useState(null);
@@ -224,6 +225,7 @@ export default function ProjectView() {
     }
     setError(null);
     setRunning(true);
+    setStopping(false);
     setProgressType(selectedType);
     setProgress(null);
     try {
@@ -235,9 +237,25 @@ export default function ProjectView() {
       setProgress(null);
       await loadDatasets();
     } catch (err) {
-      setError(err.message || "Recorder failed");
+      const msg = err?.message || "Recorder failed";
+      if (msg !== "Recorder stopped by user") {
+        setError(msg);
+      }
     } finally {
       setRunning(false);
+      setStopping(false);
+    }
+  }
+
+  async function handleStopRecorder() {
+    if (!window.mcBot?.recorder?.stop || !running || stopping) return;
+    setStopping(true);
+    setError(null);
+    try {
+      await window.mcBot.recorder.stop();
+    } catch (err) {
+      setError(err?.message || "Failed to stop recorder");
+      setStopping(false);
     }
   }
 
@@ -377,6 +395,16 @@ export default function ProjectView() {
             >
               {running && progressType === selectedType ? "Running…" : selectedRecorder.runLabel}
             </button>
+            {running && progressType === selectedType && (
+              <button
+                type="button"
+                disabled={stopping}
+                onClick={handleStopRecorder}
+                style={styles.btnDanger}
+              >
+                {stopping ? "Stopping…" : "Stop"}
+              </button>
+            )}
           </form>
         ) : (
           <p style={styles.empty}>
@@ -452,6 +480,7 @@ const styles = {
   inputShort: { padding: "0.4rem 0.6rem", background: "#0f172a", border: "1px solid #334155", borderRadius: "6px", color: "#eaeaea", width: "70px" },
   select: { padding: "0.4rem 0.6rem", background: "#0f172a", border: "1px solid #334155", borderRadius: "6px", color: "#eaeaea", minWidth: "200px" },
   btn: { padding: "0.4rem 0.8rem", background: "#2563eb", color: "#fff", border: "none", borderRadius: "6px" },
+  btnDanger: { padding: "0.4rem 0.8rem", background: "#dc2626", color: "#fff", border: "none", borderRadius: "6px" },
   btnSecondary: { padding: "0.4rem 0.8rem", background: "transparent", color: "#94a3b8", border: "1px solid #475569", borderRadius: "6px" },
   linkBtn: { background: "none", border: "none", color: "#7dd3fc", padding: "0.2rem 0.4rem", fontSize: "0.875rem" },
   linkBtnDanger: { background: "none", border: "none", color: "#f87171", padding: "0.2rem 0.4rem", fontSize: "0.875rem" },

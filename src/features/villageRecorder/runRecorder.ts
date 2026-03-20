@@ -76,11 +76,29 @@ export interface VillageRecorderProgress {
   total: number;
 }
 
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new Error("Recorder stopped by user");
+  }
+}
+
+async function sleepAbortable(ms: number, signal?: AbortSignal): Promise<void> {
+  const stepMs = 100;
+  let remaining = ms;
+  while (remaining > 0) {
+    throwIfAborted(signal);
+    const waitFor = Math.min(stepMs, remaining);
+    await sleep(waitFor);
+    remaining -= waitFor;
+  }
+}
+
 export async function runVillageRecorder(
   bot: Bot,
   config: VillageRecorderConfig,
-  options?: { onProgress?: (progress: VillageRecorderProgress) => void }
+  options?: { onProgress?: (progress: VillageRecorderProgress) => void; signal?: AbortSignal }
 ): Promise<void> {
+  throwIfAborted(options?.signal);
   const parsed = parseVillagesCsv(config.csvPath);
   if (parsed.rows.length === 0) {
     log("No village rows to process");
@@ -91,7 +109,7 @@ export async function runVillageRecorder(
   log("Switching to survival with Resistance (invincible) so bot falls to ground...");
   bot.chat("/effect give @s resistance 1000000 255 true");
   bot.chat("/gamemode survival");
-  await sleep(MODE_SWITCH_DELAY_MS);
+  await sleepAbortable(MODE_SWITCH_DELAY_MS, options?.signal);
 
   try {
     const results: { row: Record<string, string>; y: number }[] = [];
@@ -99,6 +117,7 @@ export async function runVillageRecorder(
     const zKey = parsed.header.find((h) => h.toLowerCase() === "z") ?? "z";
 
     for (let i = 0; i < parsed.rows.length; i++) {
+      throwIfAborted(options?.signal);
       const row = parsed.rows[i];
       const x = parseInt(row[xKey], 10);
       const z = parseInt(row[zKey], 10);
@@ -110,7 +129,7 @@ export async function runVillageRecorder(
         continue;
       }
 
-      await sleep(config.delayAfterTpMs);
+      await sleepAbortable(config.delayAfterTpMs, options?.signal);
 
       if (config.waitForGround) {
         const deadline = Date.now() + config.groundTimeoutMs;
@@ -120,7 +139,7 @@ export async function runVillageRecorder(
         const requiredStable = 2;
 
         while (Date.now() < deadline) {
-          await sleep(TP_CHECK_MS);
+          await sleepAbortable(TP_CHECK_MS, options?.signal);
           const pos = bot.entity.position;
           const vel = bot.entity.velocity.y;
           const hasDropped = pos.y < tpY - MIN_DROP_BELOW_TP;

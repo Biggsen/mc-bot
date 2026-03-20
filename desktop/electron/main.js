@@ -26,6 +26,8 @@ function getIndexPath() {
   return join(getAppDataPath(), "index.json");
 }
 
+let activeRecorderRun = null;
+
 async function ensureAppData() {
   const base = getAppDataPath();
   const projects = getProjectsPath();
@@ -241,7 +243,17 @@ ipcMain.handle("dialog:saveCsvCopy", async (_, { sourcePath, defaultFileName }) 
   return { canceled: false, filePath };
 });
 
+ipcMain.handle("recorder:stop", async () => {
+  if (!activeRecorderRun) return { stopped: false };
+  activeRecorderRun.controller.abort();
+  activeRecorderRun.bot?.quit?.("Recorder stopped by user");
+  return { stopped: true };
+});
+
 ipcMain.handle("recorder:runVillageY", async (event, { projectId, inputDatasetId, connection }) => {
+  if (activeRecorderRun) {
+    throw new Error("A recorder run is already in progress");
+  }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
   if (!project) throw new Error("Project not found");
@@ -270,6 +282,8 @@ ipcMain.handle("recorder:runVillageY", async (event, { projectId, inputDatasetId
     version: connection.version || undefined,
   });
   const bot = createBot(botConfig);
+  const controller = new AbortController();
+  activeRecorderRun = { type: "villages", bot, controller };
   attachEvents(bot, botConfig, { onEnd: () => {} });
 
   await new Promise((resolve, reject) => {
@@ -291,9 +305,13 @@ ipcMain.handle("recorder:runVillageY", async (event, { projectId, inputDatasetId
   try {
     await runVillageRecorder(bot, recorderConfig, {
       onProgress: (p) => sendProgress(p.current, p.total),
+      signal: controller.signal,
     });
   } finally {
     bot.quit?.("Desktop app run complete");
+    if (activeRecorderRun?.bot === bot) {
+      activeRecorderRun = null;
+    }
   }
 
   const outputName = `Villages with Y (${new Date().toLocaleString(undefined, {
@@ -321,6 +339,9 @@ ipcMain.handle("recorder:runVillageY", async (event, { projectId, inputDatasetId
 });
 
 ipcMain.handle("recorder:runJunglePyramids", async (event, { projectId, inputDatasetId, connection }) => {
+  if (activeRecorderRun) {
+    throw new Error("A recorder run is already in progress");
+  }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
   if (!project) throw new Error("Project not found");
@@ -349,6 +370,8 @@ ipcMain.handle("recorder:runJunglePyramids", async (event, { projectId, inputDat
     version: connection.version || undefined,
   });
   const bot = createBot(botConfig);
+  const controller = new AbortController();
+  activeRecorderRun = { type: "jungle_pyramids", bot, controller };
   attachEvents(bot, botConfig, { onEnd: () => {} });
 
   await new Promise((resolve, reject) => {
@@ -370,9 +393,13 @@ ipcMain.handle("recorder:runJunglePyramids", async (event, { projectId, inputDat
   try {
     await runVillageRecorder(bot, recorderConfig, {
       onProgress: (p) => sendProgress(p.current, p.total),
+      signal: controller.signal,
     });
   } finally {
     bot.quit?.("Desktop app run complete");
+    if (activeRecorderRun?.bot === bot) {
+      activeRecorderRun = null;
+    }
   }
 
   const outputName = `Jungle pyramids with Y (${new Date().toLocaleString(undefined, {
