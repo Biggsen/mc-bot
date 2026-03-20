@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld("mcBot", {
     runDesertPyramids: (opts) => ipcRenderer.invoke("recorder:runDesertPyramids", opts),
     runPillagerOutposts: (opts) => ipcRenderer.invoke("recorder:runPillagerOutposts", opts),
     runIgloos: (opts) => ipcRenderer.invoke("recorder:runIgloos", opts),
+    runTrailRuins: (opts) => ipcRenderer.invoke("recorder:runTrailRuins", opts),
     stop: () => ipcRenderer.invoke("recorder:stop"),
     onProgress: (cb) => {
       const sub = (_e, data) => cb(data);

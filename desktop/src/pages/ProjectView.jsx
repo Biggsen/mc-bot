@@ -8,6 +8,7 @@ const KNOWN_STRUCTURE_TYPES = [
   "desert_pyramids",
   "pillager_outposts",
   "igloos",
+  "trail_ruins",
 ];
 
 const STRUCTURE_LABELS = {
@@ -17,6 +18,7 @@ const STRUCTURE_LABELS = {
   desert_pyramids: "Desert Pyramids",
   pillager_outposts: "Pillager Outposts",
   igloos: "Igloos",
+  trail_ruins: "Trail Ruins",
 };
 
 const STRUCTURE_RECORDER_CONFIG = {
@@ -61,6 +63,13 @@ const STRUCTURE_RECORDER_CONFIG = {
     runLabel: "Run Igloos recorder",
     progressLabel: "Igloos",
     run: (mcBot, opts) => mcBot.recorder.runIgloos(opts),
+  },
+  trail_ruins: {
+    heading: "Run Trail Ruins Y recorder",
+    selectPlaceholder: "Select trail ruins input…",
+    runLabel: "Run Trail Ruins recorder",
+    progressLabel: "Trail ruins",
+    run: (mcBot, opts) => mcBot.recorder.runTrailRuins(opts),
   },
 };
 

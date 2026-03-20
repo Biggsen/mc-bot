@@ -11,6 +11,7 @@ let desertWellsRecorderRunning = false;
 let desertPyramidsRecorderRunning = false;
 let pillagerOutpostsRecorderRunning = false;
 let igloosRecorderRunning = false;
+let trailRuinsRecorderRunning = false;
 
 function sendLong(bot: Bot, text: string): void {
   if (text.length <= MAX_CHAT_LENGTH) {
@@ -43,7 +44,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning
+        igloosRecorderRunning ||
+        trailRuinsRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -77,7 +79,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning
+        igloosRecorderRunning ||
+        trailRuinsRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -111,7 +114,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning
+        igloosRecorderRunning ||
+        trailRuinsRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -145,7 +149,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning
+        igloosRecorderRunning ||
+        trailRuinsRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -179,7 +184,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning
+        igloosRecorderRunning ||
+        trailRuinsRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -213,7 +219,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertWellsRecorderRunning ||
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning
+        igloosRecorderRunning ||
+        trailRuinsRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -236,6 +243,41 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         })
         .finally(() => {
           igloosRecorderRunning = false;
+        });
+      return;
+    }
+
+    if (trimmed === "starttrailruins") {
+      if (
+        villageRecorderRunning ||
+        junglePyramidsRecorderRunning ||
+        desertWellsRecorderRunning ||
+        desertPyramidsRecorderRunning ||
+        pillagerOutpostsRecorderRunning ||
+        igloosRecorderRunning ||
+        trailRuinsRecorderRunning
+      ) {
+        bot.chat("A recorder is already running.");
+        return;
+      }
+      if (!config.trailRuinsRecorder) {
+        bot.chat(
+          "Trail ruins recorder not configured. Set TRAIL_RUINS_CSV_PATH and TRAIL_RUINS_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      trailRuinsRecorderRunning = true;
+      bot.chat("Starting trail ruins Y recorder...");
+      runVillageRecorder(bot, config.trailRuinsRecorder)
+        .then(() => {
+          bot.chat("Trail ruins recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Trail ruins recorder error: %s", (err as Error).message);
+          bot.chat("Trail ruins recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          trailRuinsRecorderRunning = false;
         });
       return;
     }
@@ -298,7 +340,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
     if (trimmed === "help" || trimmed === "commands") {
       bot.chat(
-        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, startigloos, help"
+        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, startigloos, starttrailruins, help"
       );
       return;
     }

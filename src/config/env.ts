@@ -26,6 +26,7 @@ export interface BotConfig {
   desertPyramidsRecorder: VillageRecorderConfig | undefined;
   pillagerOutpostsRecorder: VillageRecorderConfig | undefined;
   igloosRecorder: VillageRecorderConfig | undefined;
+  trailRuinsRecorder: VillageRecorderConfig | undefined;
 }
 
 export interface ConnectionOptions {
@@ -55,6 +56,7 @@ export function buildBotConfigFromConnection(
     desertPyramidsRecorder: undefined,
     pillagerOutpostsRecorder: undefined,
     igloosRecorder: undefined,
+    trailRuinsRecorder: undefined,
   };
 }
 
@@ -252,6 +254,32 @@ export function loadConfig(): BotConfig {
     };
   }
 
+  const trailRuinsCsvPath = process.env.TRAIL_RUINS_CSV_PATH?.trim();
+  const trailRuinsOutputPath = process.env.TRAIL_RUINS_OUTPUT_PATH?.trim();
+  let trailRuinsRecorder: VillageRecorderConfig | undefined;
+  if (trailRuinsCsvPath && trailRuinsOutputPath) {
+    const tpY = parseInt(process.env.TRAIL_RUINS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.TRAIL_RUINS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.TRAIL_RUINS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.TRAIL_RUINS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    trailRuinsRecorder = {
+      csvPath: trailRuinsCsvPath,
+      outputPath: trailRuinsOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Trail ruins",
+    };
+  }
+
   return {
     host: process.env.MC_HOST!.trim(),
     port: portNum,
@@ -269,5 +297,6 @@ export function loadConfig(): BotConfig {
     desertPyramidsRecorder,
     pillagerOutpostsRecorder,
     igloosRecorder,
+    trailRuinsRecorder,
   };
 }
