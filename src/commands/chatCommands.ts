@@ -12,6 +12,7 @@ let desertPyramidsRecorderRunning = false;
 let pillagerOutpostsRecorderRunning = false;
 let igloosRecorderRunning = false;
 let trailRuinsRecorderRunning = false;
+let buriedTreasureRecorderRunning = false;
 
 function sendLong(bot: Bot, text: string): void {
   if (text.length <= MAX_CHAT_LENGTH) {
@@ -45,7 +46,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
-        trailRuinsRecorderRunning
+        trailRuinsRecorderRunning ||
+        buriedTreasureRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -80,7 +82,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
-        trailRuinsRecorderRunning
+        trailRuinsRecorderRunning ||
+        buriedTreasureRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -115,7 +118,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
-        trailRuinsRecorderRunning
+        trailRuinsRecorderRunning ||
+        buriedTreasureRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -150,7 +154,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
-        trailRuinsRecorderRunning
+        trailRuinsRecorderRunning ||
+        buriedTreasureRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -185,7 +190,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
-        trailRuinsRecorderRunning
+        trailRuinsRecorderRunning ||
+        buriedTreasureRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -220,7 +226,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
-        trailRuinsRecorderRunning
+        trailRuinsRecorderRunning ||
+        buriedTreasureRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -255,7 +262,8 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
-        trailRuinsRecorderRunning
+        trailRuinsRecorderRunning ||
+        buriedTreasureRecorderRunning
       ) {
         bot.chat("A recorder is already running.");
         return;
@@ -278,6 +286,42 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         })
         .finally(() => {
           trailRuinsRecorderRunning = false;
+        });
+      return;
+    }
+
+    if (trimmed === "startburiedtreasure") {
+      if (
+        villageRecorderRunning ||
+        junglePyramidsRecorderRunning ||
+        desertWellsRecorderRunning ||
+        desertPyramidsRecorderRunning ||
+        pillagerOutpostsRecorderRunning ||
+        igloosRecorderRunning ||
+        trailRuinsRecorderRunning ||
+        buriedTreasureRecorderRunning
+      ) {
+        bot.chat("A recorder is already running.");
+        return;
+      }
+      if (!config.buriedTreasureRecorder) {
+        bot.chat(
+          "Buried treasure recorder not configured. Set BURIED_TREASURE_CSV_PATH and BURIED_TREASURE_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      buriedTreasureRecorderRunning = true;
+      bot.chat("Starting buried treasure Y recorder...");
+      runVillageRecorder(bot, config.buriedTreasureRecorder)
+        .then(() => {
+          bot.chat("Buried treasure recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Buried treasure recorder error: %s", (err as Error).message);
+          bot.chat("Buried treasure recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          buriedTreasureRecorderRunning = false;
         });
       return;
     }
@@ -340,7 +384,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
     if (trimmed === "help" || trimmed === "commands") {
       bot.chat(
-        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, startigloos, starttrailruins, help"
+        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, startigloos, starttrailruins, startburiedtreasure, help"
       );
       return;
     }

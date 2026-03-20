@@ -27,6 +27,7 @@ export interface BotConfig {
   pillagerOutpostsRecorder: VillageRecorderConfig | undefined;
   igloosRecorder: VillageRecorderConfig | undefined;
   trailRuinsRecorder: VillageRecorderConfig | undefined;
+  buriedTreasureRecorder: VillageRecorderConfig | undefined;
 }
 
 export interface ConnectionOptions {
@@ -57,6 +58,7 @@ export function buildBotConfigFromConnection(
     pillagerOutpostsRecorder: undefined,
     igloosRecorder: undefined,
     trailRuinsRecorder: undefined,
+    buriedTreasureRecorder: undefined,
   };
 }
 
@@ -280,6 +282,32 @@ export function loadConfig(): BotConfig {
     };
   }
 
+  const buriedTreasureCsvPath = process.env.BURIED_TREASURE_CSV_PATH?.trim();
+  const buriedTreasureOutputPath = process.env.BURIED_TREASURE_OUTPUT_PATH?.trim();
+  let buriedTreasureRecorder: VillageRecorderConfig | undefined;
+  if (buriedTreasureCsvPath && buriedTreasureOutputPath) {
+    const tpY = parseInt(process.env.BURIED_TREASURE_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.BURIED_TREASURE_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.BURIED_TREASURE_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.BURIED_TREASURE_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    buriedTreasureRecorder = {
+      csvPath: buriedTreasureCsvPath,
+      outputPath: buriedTreasureOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Buried treasure",
+    };
+  }
+
   return {
     host: process.env.MC_HOST!.trim(),
     port: portNum,
@@ -298,5 +326,6 @@ export function loadConfig(): BotConfig {
     pillagerOutpostsRecorder,
     igloosRecorder,
     trailRuinsRecorder,
+    buriedTreasureRecorder,
   };
 }
