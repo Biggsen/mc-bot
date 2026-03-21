@@ -7,6 +7,10 @@ export interface VillageRecorderConfig {
   groundTimeoutMs: number;
   /** Console log prefix, e.g. "Village", "Desert well". Default "Village". */
   logLabel?: string;
+  /** Dig straight down until a chest block is under the feet; used by desktop buried treasure runs. */
+  digUntilChestBelowFeet?: boolean;
+  /** Max dig attempts per row when digUntilChestBelowFeet is set. Default 32. */
+  maxDigSteps?: number;
 }
 
 export interface BotConfig {

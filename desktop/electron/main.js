@@ -923,6 +923,8 @@ ipcMain.handle("recorder:runBuriedTreasure", async (event, { projectId, inputDat
     waitForGround: true,
     groundTimeoutMs: 15000,
     logLabel: "Buried treasure",
+    digUntilChestBelowFeet: true,
+    maxDigSteps: 32,
   };
 
   try {
@@ -937,7 +939,10 @@ ipcMain.handle("recorder:runBuriedTreasure", async (event, { projectId, inputDat
     }
   }
 
-  const outputName = `Buried treasure with Y (${new Date().toLocaleString(undefined, {
+  const inputLabel =
+    (inputDs.name && String(inputDs.name).trim()) ||
+    basename(inputDs.filePath, ".csv");
+  const outputName = `${inputLabel} with Y (${new Date().toLocaleString(undefined, {
     dateStyle: "short",
     timeStyle: "short",
   })})`;
