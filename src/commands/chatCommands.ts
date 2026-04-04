@@ -11,6 +11,7 @@ let desertWellsRecorderRunning = false;
 let desertPyramidsRecorderRunning = false;
 let pillagerOutpostsRecorderRunning = false;
 let igloosRecorderRunning = false;
+let swampHutsRecorderRunning = false;
 let trailRuinsRecorderRunning = false;
 let woodlandMansionsRecorderRunning = false;
 let buriedTreasureRecorderRunning = false;
@@ -47,6 +48,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
         trailRuinsRecorderRunning ||
         buriedTreasureRecorderRunning ||
         woodlandMansionsRecorderRunning
@@ -84,6 +86,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
         trailRuinsRecorderRunning ||
         buriedTreasureRecorderRunning ||
         woodlandMansionsRecorderRunning
@@ -121,6 +124,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
         trailRuinsRecorderRunning ||
         buriedTreasureRecorderRunning ||
         woodlandMansionsRecorderRunning
@@ -158,6 +162,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
         trailRuinsRecorderRunning ||
         buriedTreasureRecorderRunning ||
         woodlandMansionsRecorderRunning
@@ -195,6 +200,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
         trailRuinsRecorderRunning ||
         buriedTreasureRecorderRunning ||
         woodlandMansionsRecorderRunning
@@ -232,6 +238,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
         trailRuinsRecorderRunning ||
         buriedTreasureRecorderRunning ||
         woodlandMansionsRecorderRunning
@@ -261,6 +268,44 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
       return;
     }
 
+    if (trimmed === "startswamphuts") {
+      if (
+        villageRecorderRunning ||
+        junglePyramidsRecorderRunning ||
+        desertWellsRecorderRunning ||
+        desertPyramidsRecorderRunning ||
+        pillagerOutpostsRecorderRunning ||
+        igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
+        trailRuinsRecorderRunning ||
+        buriedTreasureRecorderRunning ||
+        woodlandMansionsRecorderRunning
+      ) {
+        bot.chat("A recorder is already running.");
+        return;
+      }
+      if (!config.swampHutsRecorder) {
+        bot.chat(
+          "Swamp huts recorder not configured. Set SWAMP_HUTS_CSV_PATH and SWAMP_HUTS_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      swampHutsRecorderRunning = true;
+      bot.chat("Starting swamp huts Y recorder...");
+      runVillageRecorder(bot, config.swampHutsRecorder)
+        .then(() => {
+          bot.chat("Swamp huts recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Swamp huts recorder error: %s", (err as Error).message);
+          bot.chat("Swamp huts recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          swampHutsRecorderRunning = false;
+        });
+      return;
+    }
+
     if (trimmed === "starttrailruins") {
       if (
         villageRecorderRunning ||
@@ -269,6 +314,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
         trailRuinsRecorderRunning ||
         buriedTreasureRecorderRunning ||
         woodlandMansionsRecorderRunning
@@ -306,6 +352,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
         trailRuinsRecorderRunning ||
         buriedTreasureRecorderRunning ||
         woodlandMansionsRecorderRunning
@@ -343,6 +390,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
         desertPyramidsRecorderRunning ||
         pillagerOutpostsRecorderRunning ||
         igloosRecorderRunning ||
+        swampHutsRecorderRunning ||
         trailRuinsRecorderRunning ||
         buriedTreasureRecorderRunning ||
         woodlandMansionsRecorderRunning
@@ -430,7 +478,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
     if (trimmed === "help" || trimmed === "commands") {
       bot.chat(
-        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, startigloos, starttrailruins, startwoodlandmansions, startburiedtreasure, help"
+        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, startigloos, startswamphuts, starttrailruins, startwoodlandmansions, startburiedtreasure, help"
       );
       return;
     }
