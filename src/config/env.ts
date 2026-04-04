@@ -30,6 +30,7 @@ export interface BotConfig {
   desertPyramidsRecorder: VillageRecorderConfig | undefined;
   pillagerOutpostsRecorder: VillageRecorderConfig | undefined;
   igloosRecorder: VillageRecorderConfig | undefined;
+  swampHutsRecorder: VillageRecorderConfig | undefined;
   trailRuinsRecorder: VillageRecorderConfig | undefined;
   buriedTreasureRecorder: VillageRecorderConfig | undefined;
   woodlandMansionsRecorder: VillageRecorderConfig | undefined;
@@ -62,6 +63,7 @@ export function buildBotConfigFromConnection(
     desertPyramidsRecorder: undefined,
     pillagerOutpostsRecorder: undefined,
     igloosRecorder: undefined,
+    swampHutsRecorder: undefined,
     trailRuinsRecorder: undefined,
     buriedTreasureRecorder: undefined,
     woodlandMansionsRecorder: undefined,
@@ -262,6 +264,32 @@ export function loadConfig(): BotConfig {
     };
   }
 
+  const swampHutsCsvPath = process.env.SWAMP_HUTS_CSV_PATH?.trim();
+  const swampHutsOutputPath = process.env.SWAMP_HUTS_OUTPUT_PATH?.trim();
+  let swampHutsRecorder: VillageRecorderConfig | undefined;
+  if (swampHutsCsvPath && swampHutsOutputPath) {
+    const tpY = parseInt(process.env.SWAMP_HUTS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.SWAMP_HUTS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.SWAMP_HUTS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.SWAMP_HUTS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    swampHutsRecorder = {
+      csvPath: swampHutsCsvPath,
+      outputPath: swampHutsOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Swamp hut",
+    };
+  }
+
   const trailRuinsCsvPath = process.env.TRAIL_RUINS_CSV_PATH?.trim();
   const trailRuinsOutputPath = process.env.TRAIL_RUINS_OUTPUT_PATH?.trim();
   let trailRuinsRecorder: VillageRecorderConfig | undefined;
@@ -357,6 +385,7 @@ export function loadConfig(): BotConfig {
     desertPyramidsRecorder,
     pillagerOutpostsRecorder,
     igloosRecorder,
+    swampHutsRecorder,
     trailRuinsRecorder,
     buriedTreasureRecorder,
     woodlandMansionsRecorder,
