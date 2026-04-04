@@ -1,17 +1,23 @@
 {
   "name": "mc-bot",
   "version": "0.1.0",
-  "description": "mc-bot project",
+  "description": "MC-Bot: Mineflayer library and desktop app for recorders and server projects",
   "type": "module",
-  "main": "dist/index.js",
+  "workspaces": [
+    "desktop"
+  ],
+  "main": "dist/lib.js",
   "exports": {
-    ".": "./dist/index.js",
+    ".": "./dist/lib.js",
     "./lib": "./dist/lib.js"
   },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "electron:dev": "npm run electron:dev --workspace=mc-bot-desktop",
+    "electron:build": "npm run build && npm run build --workspace=mc-bot-desktop",
+    "electron:pack": "npm run build && npm run pack --workspace=mc-bot-desktop",
+    "electron:dist": "npm run build && npm run dist --workspace=mc-bot-desktop"
   },
   "keywords": [],
   "author": "",

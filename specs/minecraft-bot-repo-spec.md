@@ -201,7 +201,7 @@ minecraft-bot/
   .gitignore
   docker-compose.yml                # optional starter setup
   src/
-    index.js                        # or index.ts
+    lib.js                          # or lib.ts — package entry (createBot, recorders)
     config/
       env.js
     bot/
@@ -219,7 +219,7 @@ If using TypeScript:
 minecraft-bot/
   tsconfig.json
   src/
-    index.ts
+    lib.ts
     config/
       env.ts
     bot/
