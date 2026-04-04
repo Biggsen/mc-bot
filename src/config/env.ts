@@ -32,6 +32,7 @@ export interface BotConfig {
   igloosRecorder: VillageRecorderConfig | undefined;
   trailRuinsRecorder: VillageRecorderConfig | undefined;
   buriedTreasureRecorder: VillageRecorderConfig | undefined;
+  woodlandMansionsRecorder: VillageRecorderConfig | undefined;
 }
 
 export interface ConnectionOptions {
@@ -63,6 +64,7 @@ export function buildBotConfigFromConnection(
     igloosRecorder: undefined,
     trailRuinsRecorder: undefined,
     buriedTreasureRecorder: undefined,
+    woodlandMansionsRecorder: undefined,
   };
 }
 
@@ -286,6 +288,32 @@ export function loadConfig(): BotConfig {
     };
   }
 
+  const woodlandMansionsCsvPath = process.env.WOODLAND_MANSIONS_CSV_PATH?.trim();
+  const woodlandMansionsOutputPath = process.env.WOODLAND_MANSIONS_OUTPUT_PATH?.trim();
+  let woodlandMansionsRecorder: VillageRecorderConfig | undefined;
+  if (woodlandMansionsCsvPath && woodlandMansionsOutputPath) {
+    const tpY = parseInt(process.env.WOODLAND_MANSIONS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.WOODLAND_MANSIONS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.WOODLAND_MANSIONS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.WOODLAND_MANSIONS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    woodlandMansionsRecorder = {
+      csvPath: woodlandMansionsCsvPath,
+      outputPath: woodlandMansionsOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Woodland mansion",
+    };
+  }
+
   const buriedTreasureCsvPath = process.env.BURIED_TREASURE_CSV_PATH?.trim();
   const buriedTreasureOutputPath = process.env.BURIED_TREASURE_OUTPUT_PATH?.trim();
   let buriedTreasureRecorder: VillageRecorderConfig | undefined;
@@ -331,5 +359,6 @@ export function loadConfig(): BotConfig {
     igloosRecorder,
     trailRuinsRecorder,
     buriedTreasureRecorder,
+    woodlandMansionsRecorder,
   };
 }

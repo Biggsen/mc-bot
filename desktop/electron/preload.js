@@ -30,6 +30,7 @@ contextBridge.exposeInMainWorld("mcBot", {
     runPillagerOutposts: (opts) => ipcRenderer.invoke("recorder:runPillagerOutposts", opts),
     runIgloos: (opts) => ipcRenderer.invoke("recorder:runIgloos", opts),
     runTrailRuins: (opts) => ipcRenderer.invoke("recorder:runTrailRuins", opts),
+    runWoodlandMansions: (opts) => ipcRenderer.invoke("recorder:runWoodlandMansions", opts),
     runBuriedTreasure: (opts) => ipcRenderer.invoke("recorder:runBuriedTreasure", opts),
     stop: () => ipcRenderer.invoke("recorder:stop"),
     onProgress: (cb) => {
