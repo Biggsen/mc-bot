@@ -10,8 +10,10 @@ const KNOWN_STRUCTURE_TYPES = [
   "igloos",
   "swamp_huts",
   "trail_ruins",
+  "shipwrecks",
   "woodland_mansions",
   "buried_treasure",
+  "hearts",
 ];
 
 const STRUCTURE_LABELS = {
@@ -23,8 +25,10 @@ const STRUCTURE_LABELS = {
   igloos: "Igloos",
   swamp_huts: "Swamp Huts",
   trail_ruins: "Trail Ruins",
+  shipwrecks: "Shipwrecks",
   woodland_mansions: "Woodland Mansions",
   buried_treasure: "Buried Treasure",
+  hearts: "Region hearts",
 };
 
 const STRUCTURE_RECORDER_CONFIG = {
@@ -84,6 +88,13 @@ const STRUCTURE_RECORDER_CONFIG = {
     progressLabel: "Trail ruins",
     run: (mcBot, opts) => mcBot.recorder.runTrailRuins(opts),
   },
+  shipwrecks: {
+    heading: "Run Shipwrecks Y recorder",
+    selectPlaceholder: "Select shipwrecks input…",
+    runLabel: "Run Shipwrecks recorder",
+    progressLabel: "Shipwrecks",
+    run: (mcBot, opts) => mcBot.recorder.runShipwrecks(opts),
+  },
   woodland_mansions: {
     heading: "Run Woodland Mansions Y recorder",
     selectPlaceholder: "Select woodland mansions input…",
@@ -97,6 +108,13 @@ const STRUCTURE_RECORDER_CONFIG = {
     runLabel: "Run Buried Treasure recorder",
     progressLabel: "Buried treasure",
     run: (mcBot, opts) => mcBot.recorder.runBuriedTreasure(opts),
+  },
+  hearts: {
+    heading: "Run Region hearts Y recorder",
+    selectPlaceholder: "Select region hearts input…",
+    runLabel: "Run Region hearts recorder",
+    progressLabel: "Region hearts",
+    run: (mcBot, opts) => mcBot.recorder.runHearts(opts),
   },
 };
 
