@@ -75,6 +75,97 @@ const ROW_ATTEMPT_TIMEOUT_MS = 30_000;
 /** Same X,Z: scan this many blocks down from feet for chest (underwater: water above chest). */
 const CHEST_COLUMN_SCAN_BLOCKS = 16;
 
+const WOOD_SCAN_SIZE = 16;
+/** South = +Z. Box is 16 wide (X), 16 tall (Y), 16 deep (Z), starting one block south of feet. */
+const WOOD_SCAN_HALF = 7;
+const WOOD_SCAN_Z0 = 1;
+
+function isConsoleWoodAllowlist(name: string): boolean {
+  if (name === "iron_trapdoor") return false;
+  if (name.endsWith("_planks")) return true;
+  if (name.endsWith("_log")) return true;
+  if (name.endsWith("_wood")) return true;
+  if (name.endsWith("_trapdoor")) return true;
+  return false;
+}
+
+/**
+ * Face south (+Z) by looking at a point south of the bot, then log matching blocks in the scan box.
+ */
+async function consoleSouthWoodScan16Ahead(
+  bot: Bot,
+  label: string,
+  rowNum: number,
+  rowX: number,
+  rowZ: number,
+  signal?: AbortSignal
+): Promise<void> {
+  throwIfAborted(signal);
+  const feet = bot.entity.position.floored();
+  const lookTarget = feet.offset(0, 1, 8).offset(0.5, 0.5, 0.5);
+  try {
+    await bot.lookAt(lookTarget, true);
+  } catch (e) {
+    error(
+      "%s %d (%d, %d): look south failed: %s",
+      label,
+      rowNum,
+      rowX,
+      rowZ,
+      (e as Error).message
+    );
+  }
+  throwIfAborted(signal);
+
+  const bx = feet.x;
+  const by = feet.y;
+  const bz = feet.z;
+  const minX = bx - WOOD_SCAN_HALF;
+  const maxX = minX + WOOD_SCAN_SIZE;
+  const minY = by - WOOD_SCAN_HALF;
+  const maxY = minY + WOOD_SCAN_SIZE;
+  const minZ = bz + WOOD_SCAN_Z0;
+  const maxZ = minZ + WOOD_SCAN_SIZE;
+
+  const matches: { name: string; x: number; y: number; z: number }[] = [];
+  for (let x = minX; x < maxX; x++) {
+    for (let y = minY; y < maxY; y++) {
+      for (let z = minZ; z < maxZ; z++) {
+        throwIfAborted(signal);
+        const b = bot.blockAt(feet.offset(x - bx, y - by, z - bz));
+        if (!b || b.name === "air" || b.name === "cave_air" || b.name === "void_air") continue;
+        if (!isConsoleWoodAllowlist(b.name)) continue;
+        matches.push({ name: b.name, x, y, z });
+      }
+    }
+  }
+
+  const counts = new Map<string, number>();
+  for (const m of matches) {
+    counts.set(m.name, (counts.get(m.name) ?? 0) + 1);
+  }
+  const countStr = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([n, c]) => `${n}=${c}`)
+    .join(", ");
+
+  log(
+    "%s %d (%d, %d): south wood scan 16³ [%d..%d × %d..%d × %d..%d] → %d block(s)%s",
+    label,
+    rowNum,
+    rowX,
+    rowZ,
+    minX,
+    maxX - 1,
+    minY,
+    maxY - 1,
+    minZ,
+    maxZ - 1,
+    matches.length,
+    countStr ? ` (${countStr})` : ""
+  );
+}
+
 export interface VillageRecorderProgress {
   current: number;
   total: number;
@@ -371,6 +462,10 @@ export async function runVillageRecorder(
               z
             );
           }
+        }
+
+        if (config.consoleSouthWoodScan16) {
+          await consoleSouthWoodScan16Ahead(bot, label, i + 1, x, z, rowSignal);
         }
 
         if (config.digUntilChestBelowFeet) {

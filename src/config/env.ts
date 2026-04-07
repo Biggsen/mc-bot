@@ -11,6 +11,11 @@ export interface VillageRecorderConfig {
   digUntilChestBelowFeet?: boolean;
   /** Max dig attempts per row when digUntilChestBelowFeet is set. Default 32. */
   maxDigSteps?: number;
+  /**
+   * After landing, face south (+Z) and log any planks / logs / wood / wooden trapdoors
+   * in a 16×16×16 box ahead of the bot (console only). Used for shipwreck runs.
+   */
+  consoleSouthWoodScan16?: boolean;
 }
 
 export interface BotConfig {
@@ -32,8 +37,10 @@ export interface BotConfig {
   igloosRecorder: VillageRecorderConfig | undefined;
   swampHutsRecorder: VillageRecorderConfig | undefined;
   trailRuinsRecorder: VillageRecorderConfig | undefined;
+  shipwrecksRecorder: VillageRecorderConfig | undefined;
   buriedTreasureRecorder: VillageRecorderConfig | undefined;
   woodlandMansionsRecorder: VillageRecorderConfig | undefined;
+  heartsRecorder: VillageRecorderConfig | undefined;
 }
 
 export interface ConnectionOptions {
@@ -65,8 +72,10 @@ export function buildBotConfigFromConnection(
     igloosRecorder: undefined,
     swampHutsRecorder: undefined,
     trailRuinsRecorder: undefined,
+    shipwrecksRecorder: undefined,
     buriedTreasureRecorder: undefined,
     woodlandMansionsRecorder: undefined,
+    heartsRecorder: undefined,
   };
 }
 
@@ -316,6 +325,36 @@ export function loadConfig(): BotConfig {
     };
   }
 
+  const shipwrecksCsvPath = process.env.SHIPWRECKS_CSV_PATH?.trim();
+  const shipwrecksOutputPath = process.env.SHIPWRECKS_OUTPUT_PATH?.trim();
+  let shipwrecksRecorder: VillageRecorderConfig | undefined;
+  if (shipwrecksCsvPath && shipwrecksOutputPath) {
+    const tpY = parseInt(process.env.SHIPWRECKS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.SHIPWRECKS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.SHIPWRECKS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.SHIPWRECKS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    const consoleSouthWoodScan16 =
+      process.env.SHIPWRECKS_CONSOLE_SOUTH_WOOD_SCAN?.trim().toLowerCase() !==
+      "false";
+    shipwrecksRecorder = {
+      csvPath: shipwrecksCsvPath,
+      outputPath: shipwrecksOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Shipwreck",
+      consoleSouthWoodScan16,
+    };
+  }
+
   const woodlandMansionsCsvPath = process.env.WOODLAND_MANSIONS_CSV_PATH?.trim();
   const woodlandMansionsOutputPath = process.env.WOODLAND_MANSIONS_OUTPUT_PATH?.trim();
   let woodlandMansionsRecorder: VillageRecorderConfig | undefined;
@@ -339,6 +378,32 @@ export function loadConfig(): BotConfig {
       waitForGround,
       groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
       logLabel: "Woodland mansion",
+    };
+  }
+
+  const heartsCsvPath = process.env.HEARTS_CSV_PATH?.trim();
+  const heartsOutputPath = process.env.HEARTS_OUTPUT_PATH?.trim();
+  let heartsRecorder: VillageRecorderConfig | undefined;
+  if (heartsCsvPath && heartsOutputPath) {
+    const tpY = parseInt(process.env.HEARTS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.HEARTS_DELAY_AFTER_TP_MS ?? "500",
+      10
+    );
+    const waitForGround =
+      process.env.HEARTS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.HEARTS_GROUND_TIMEOUT_MS ?? "15000",
+      10
+    );
+    heartsRecorder = {
+      csvPath: heartsCsvPath,
+      outputPath: heartsOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 500 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 15000 : groundTimeoutMs,
+      logLabel: "Region heart",
     };
   }
 
@@ -387,7 +452,9 @@ export function loadConfig(): BotConfig {
     igloosRecorder,
     swampHutsRecorder,
     trailRuinsRecorder,
+    shipwrecksRecorder,
     buriedTreasureRecorder,
     woodlandMansionsRecorder,
+    heartsRecorder,
   };
 }
