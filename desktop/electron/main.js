@@ -250,9 +250,57 @@ ipcMain.handle("recorder:stop", async () => {
   return { stopped: true };
 });
 
+/** Connects the bot and leaves it in-world until disconnect or recorder:stop (for /op, etc.). */
+ipcMain.handle("bot:joinWorld", async (event, { connection }) => {
+  if (activeRecorderRun) {
+    throw new Error("A bot session or recorder run is already active");
+  }
+  if (!connection?.host || !connection?.port || !connection?.username) {
+    throw new Error("Project connection (host, port, username) is required");
+  }
+  const { createBot } = await import("mc-bot/lib");
+  const { attachEvents } = await import("mc-bot/lib");
+  const { buildBotConfigFromConnection } = await import("mc-bot/lib");
+
+  const botConfig = buildBotConfigFromConnection({
+    host: connection.host,
+    port: Number(connection.port),
+    username: connection.username,
+    version: connection.version || undefined,
+  });
+  const bot = createBot(botConfig);
+  const controller = new AbortController();
+  const sender = event.sender;
+
+  const clearSession = () => {
+    if (activeRecorderRun?.bot === bot) activeRecorderRun = null;
+    if (!sender.isDestroyed()) sender.send("bot:sessionEnded");
+  };
+
+  bot.once("end", clearSession);
+  activeRecorderRun = { type: "place_world", bot, controller };
+  attachEvents(bot, botConfig, { onEnd: () => {} });
+
+  try {
+    await new Promise((resolve, reject) => {
+      bot.once("spawn", resolve);
+      bot.once("error", reject);
+      bot.once("kicked", (reason) => reject(new Error(String(reason))));
+      bot.once("end", (reason) => reject(new Error("Disconnected: " + (reason || "unknown"))));
+    });
+  } catch (err) {
+    bot.removeListener("end", clearSession);
+    bot.quit?.("Join failed");
+    if (activeRecorderRun?.bot === bot) activeRecorderRun = null;
+    throw err;
+  }
+
+  return { ok: true };
+});
+
 ipcMain.handle("recorder:runVillageY", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -340,7 +388,7 @@ ipcMain.handle("recorder:runVillageY", async (event, { projectId, inputDatasetId
 
 ipcMain.handle("recorder:runJunglePyramids", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -429,7 +477,7 @@ ipcMain.handle("recorder:runJunglePyramids", async (event, { projectId, inputDat
 
 ipcMain.handle("recorder:runDesertWells", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -518,7 +566,7 @@ ipcMain.handle("recorder:runDesertWells", async (event, { projectId, inputDatase
 
 ipcMain.handle("recorder:runDesertPyramids", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -607,7 +655,7 @@ ipcMain.handle("recorder:runDesertPyramids", async (event, { projectId, inputDat
 
 ipcMain.handle("recorder:runPillagerOutposts", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -696,7 +744,7 @@ ipcMain.handle("recorder:runPillagerOutposts", async (event, { projectId, inputD
 
 ipcMain.handle("recorder:runIgloos", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -785,7 +833,7 @@ ipcMain.handle("recorder:runIgloos", async (event, { projectId, inputDatasetId, 
 
 ipcMain.handle("recorder:runSwampHuts", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -874,7 +922,7 @@ ipcMain.handle("recorder:runSwampHuts", async (event, { projectId, inputDatasetI
 
 ipcMain.handle("recorder:runTrailRuins", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -963,7 +1011,7 @@ ipcMain.handle("recorder:runTrailRuins", async (event, { projectId, inputDataset
 
 ipcMain.handle("recorder:runShipwrecks", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -1053,7 +1101,7 @@ ipcMain.handle("recorder:runShipwrecks", async (event, { projectId, inputDataset
 
 ipcMain.handle("recorder:runWoodlandMansions", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -1142,7 +1190,7 @@ ipcMain.handle("recorder:runWoodlandMansions", async (event, { projectId, inputD
 
 ipcMain.handle("recorder:runBuriedTreasure", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);
@@ -1236,7 +1284,7 @@ ipcMain.handle("recorder:runBuriedTreasure", async (event, { projectId, inputDat
 
 ipcMain.handle("recorder:runHearts", async (event, { projectId, inputDatasetId, connection }) => {
   if (activeRecorderRun) {
-    throw new Error("A recorder run is already in progress");
+    throw new Error("A bot session or recorder run is already active");
   }
   const index = await loadIndex();
   const project = index.projects.find((x) => x.id === projectId);

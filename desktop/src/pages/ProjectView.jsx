@@ -170,6 +170,9 @@ export default function ProjectView() {
   const [error, setError] = useState(null);
   const [previewContent, setPreviewContent] = useState(null);
   const [previewPath, setPreviewPath] = useState(null);
+  const [idleBotConnected, setIdleBotConnected] = useState(false);
+  const [placingBot, setPlacingBot] = useState(false);
+  const [disconnectingBot, setDisconnectingBot] = useState(false);
 
   const loadProject = useCallback(async () => {
     if (!window.mcBot) return null;
@@ -210,6 +213,16 @@ export default function ProjectView() {
     });
     return unsub;
   }, [projectId]);
+
+  useEffect(() => {
+    if (!window.mcBot?.bot?.onSessionEnded) return;
+    const unsub = window.mcBot.bot.onSessionEnded(() => {
+      setIdleBotConnected(false);
+      setPlacingBot(false);
+      setDisconnectingBot(false);
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     setRunInputId("");
@@ -352,6 +365,39 @@ export default function ProjectView() {
     }
   }
 
+  async function handleJoinWorld() {
+    if (!window.mcBot?.bot?.joinWorld || placingBot || idleBotConnected) return;
+    const conn = project?.connection;
+    if (!conn?.host || !conn?.port || !conn?.username) {
+      setError("Set connection (host, port, username) first.");
+      return;
+    }
+    setError(null);
+    setPlacingBot(true);
+    try {
+      await window.mcBot.bot.joinWorld({ connection: conn });
+      setIdleBotConnected(true);
+    } catch (err) {
+      setError(err?.message || "Failed to join server");
+    } finally {
+      setPlacingBot(false);
+    }
+  }
+
+  async function handleLeaveWorld() {
+    if (!window.mcBot?.bot?.leaveWorld || !idleBotConnected || disconnectingBot) return;
+    setDisconnectingBot(true);
+    setError(null);
+    try {
+      await window.mcBot.bot.leaveWorld();
+      setIdleBotConnected(false);
+    } catch (err) {
+      setError(err?.message || "Failed to disconnect");
+    } finally {
+      setDisconnectingBot(false);
+    }
+  }
+
   const inputs = datasets.filter((d) => d.role === "input");
   const outputs = datasets.filter((d) => d.role === "output");
   const structureTypes = Array.from(
@@ -417,6 +463,33 @@ export default function ProjectView() {
             </button>
           </div>
         )}
+        {!editing && project.connection?.host && (
+          <div style={styles.placeBotRow}>
+            <button
+              type="button"
+              onClick={handleJoinWorld}
+              disabled={running || idleBotConnected || placingBot}
+              style={styles.btn}
+            >
+              {placingBot ? "Joining…" : "Place bot in world"}
+            </button>
+            {idleBotConnected && (
+              <>
+                <span style={styles.placeBotHint}>
+                  In world — run <code style={styles.code}>/op {project.connection.username}</code> from the server console, then disconnect when done.
+                </span>
+                <button
+                  type="button"
+                  onClick={handleLeaveWorld}
+                  disabled={disconnectingBot}
+                  style={styles.btnSecondary}
+                >
+                  {disconnectingBot ? "Disconnecting…" : "Disconnect bot"}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </section>
 
       <section style={styles.section}>
@@ -425,7 +498,7 @@ export default function ProjectView() {
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
           style={styles.select}
-          disabled={running}
+          disabled={running || idleBotConnected}
         >
           {structureTypes.map((type) => (
             <option key={type} value={type}>
@@ -437,7 +510,7 @@ export default function ProjectView() {
 
       <section style={styles.section}>
         <h2 style={styles.h2}>Input datasets</h2>
-        <button type="button" onClick={handleAddInput} disabled={running} style={styles.btn}>
+        <button type="button" onClick={handleAddInput} disabled={running || idleBotConnected} style={styles.btn}>
           Add {getStructureLabel(selectedType)} CSV…
         </button>
         <DatasetList
@@ -472,7 +545,7 @@ export default function ProjectView() {
               value={runInputId}
               onChange={(e) => setRunInputId(e.target.value)}
               style={styles.select}
-              disabled={running}
+              disabled={running || idleBotConnected}
             >
               <option value="">{selectedRecorder.selectPlaceholder}</option>
               {selectedInputs.map((d) => (
@@ -483,7 +556,7 @@ export default function ProjectView() {
             </select>
             <button
               type="submit"
-              disabled={running || !runInputId}
+              disabled={running || idleBotConnected || !runInputId}
               style={styles.btn}
             >
               {running && progressType === selectedType ? "Running…" : selectedRecorder.runLabel}
@@ -569,6 +642,21 @@ const styles = {
   form: { display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" },
   runForm: { display: "flex", gap: "0.5rem", alignItems: "center" },
   meta: { display: "flex", gap: "0.5rem", alignItems: "center", color: "#94a3b8", fontSize: "0.9rem" },
+  placeBotRow: {
+    marginTop: "0.75rem",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "0.5rem",
+    alignItems: "center",
+  },
+  placeBotHint: { fontSize: "0.85rem", color: "#94a3b8", maxWidth: "42rem" },
+  code: {
+    fontSize: "0.85em",
+    background: "#0f172a",
+    padding: "0.1rem 0.35rem",
+    borderRadius: "4px",
+    border: "1px solid #334155",
+  },
   input: { padding: "0.4rem 0.6rem", background: "#0f172a", border: "1px solid #334155", borderRadius: "6px", color: "#eaeaea", width: "140px" },
   inputShort: { padding: "0.4rem 0.6rem", background: "#0f172a", border: "1px solid #334155", borderRadius: "6px", color: "#eaeaea", width: "70px" },
   select: { padding: "0.4rem 0.6rem", background: "#0f172a", border: "1px solid #334155", borderRadius: "6px", color: "#eaeaea", minWidth: "200px" },

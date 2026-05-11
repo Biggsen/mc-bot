@@ -22,6 +22,15 @@ contextBridge.exposeInMainWorld("mcBot", {
     openCsv: () => ipcRenderer.invoke("dialog:openCsv"),
     saveCsvCopy: (opts) => ipcRenderer.invoke("dialog:saveCsvCopy", opts),
   },
+  bot: {
+    joinWorld: (opts) => ipcRenderer.invoke("bot:joinWorld", opts),
+    leaveWorld: () => ipcRenderer.invoke("recorder:stop"),
+    onSessionEnded: (cb) => {
+      const sub = () => cb();
+      ipcRenderer.on("bot:sessionEnded", sub);
+      return () => ipcRenderer.removeListener("bot:sessionEnded", sub);
+    },
+  },
   recorder: {
     runVillageY: (opts) => ipcRenderer.invoke("recorder:runVillageY", opts),
     runJunglePyramids: (opts) => ipcRenderer.invoke("recorder:runJunglePyramids", opts),
