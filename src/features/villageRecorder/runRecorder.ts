@@ -8,6 +8,10 @@ const TP_CHECK_MS = 100;
 const GROUND_VELOCITY_EPS = 0.25;
 const GROUND_POS_EPS = 1.0;
 const MIN_DROP_BELOW_TP = 5;
+/** Sinking onto seabed: allow slower settle and require non-fluid block under feet. */
+const FLUID_SINK_VEL_EPS = 0.55;
+const FLUID_SINK_POS_EPS = 1.6;
+const FLUID_SINK_STABLE_TICKS = 3;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -209,12 +213,13 @@ async function waitUntilStable(
   bot: Bot,
   tpY: number,
   groundTimeoutMs: number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  relaxFluidSink?: boolean
 ): Promise<boolean> {
   const deadline = Date.now() + groundTimeoutMs;
   let lastY = bot.entity.position.y;
   let stableTicks = 0;
-  const requiredStable = 2;
+  const requiredStable = relaxFluidSink ? FLUID_SINK_STABLE_TICKS : 2;
 
   while (Date.now() < deadline) {
     await sleepAbortable(TP_CHECK_MS, signal);
@@ -222,10 +227,20 @@ async function waitUntilStable(
     const vel = bot.entity.velocity.y;
     const hasDropped = pos.y < tpY - MIN_DROP_BELOW_TP;
     const dy = Math.abs(pos.y - lastY);
-    const isStable =
-      hasDropped &&
-      Math.abs(vel) < GROUND_VELOCITY_EPS &&
-      dy < GROUND_POS_EPS;
+    let isStable: boolean;
+    if (relaxFluidSink) {
+      const onSolid = feetOnSolidSupport(bot);
+      isStable =
+        hasDropped &&
+        onSolid &&
+        Math.abs(vel) < FLUID_SINK_VEL_EPS &&
+        dy < FLUID_SINK_POS_EPS;
+    } else {
+      isStable =
+        hasDropped &&
+        Math.abs(vel) < GROUND_VELOCITY_EPS &&
+        dy < GROUND_POS_EPS;
+    }
     if (isStable) {
       stableTicks++;
       if (stableTicks >= requiredStable) return true;
@@ -265,6 +280,16 @@ function isFluidBlockName(name: string): boolean {
   );
 }
 
+function feetOnSolidSupport(bot: Bot): boolean {
+  const pos = bot.entity.position.floored();
+  const below = bot.blockAt(pos.offset(0, -1, 0));
+  if (!below) return false;
+  const n = below.name;
+  if (n === "air" || n === "cave_air" || n === "void_air") return false;
+  if (isFluidBlockName(n)) return false;
+  return true;
+}
+
 /** True if any block in the column under the feet (same X,Z, increasing depth) is a chest. */
 function hasChestInColumnBelowFeet(bot: Bot, maxDown: number): boolean {
   const pos = bot.entity.position.floored();
@@ -292,7 +317,13 @@ async function digUntilChestBelowFeet(
 
   for (let step = 0; step < maxSteps; step++) {
     throwIfAborted(signal);
-    const stable = await waitUntilStable(bot, tpY, timeoutMs, signal);
+    const stable = await waitUntilStable(
+      bot,
+      tpY,
+      timeoutMs,
+      signal,
+      config.relaxStableForFluidSink
+    );
     if (!stable) {
       error(
         "Timeout waiting for stable ground before dig at %s %d (%d, %d)",
@@ -438,11 +469,15 @@ export async function runVillageRecorder(
 
       await sleepAbortable(config.delayAfterTpMs, options?.signal);
 
+      const rowAttemptMs = Math.max(
+        ROW_ATTEMPT_TIMEOUT_MS,
+        config.groundTimeoutMs + 15_000
+      );
       const rowTimeout = new AbortController();
       const rowTimer = setTimeout(() => {
         rowTimeout.abort();
         bot.stopDigging?.();
-      }, ROW_ATTEMPT_TIMEOUT_MS);
+      }, rowAttemptMs);
       const rowSignal = combineAbortSignals(options?.signal, rowTimeout.signal);
 
       try {
@@ -451,7 +486,8 @@ export async function runVillageRecorder(
             bot,
             config.tpY,
             config.groundTimeoutMs,
-            rowSignal
+            rowSignal,
+            config.relaxStableForFluidSink
           );
           if (!stable) {
             error(
@@ -486,7 +522,7 @@ export async function runVillageRecorder(
           if (rowTimeout.signal.aborted) {
             error(
               "Row attempt exceeded %dms at %s %d (%d, %d), using current Y",
-              ROW_ATTEMPT_TIMEOUT_MS,
+              rowAttemptMs,
               label,
               i + 1,
               x,

@@ -14,9 +14,28 @@ let igloosRecorderRunning = false;
 let swampHutsRecorderRunning = false;
 let trailRuinsRecorderRunning = false;
 let shipwrecksRecorderRunning = false;
+let oceanRuinsRecorderRunning = false;
 let woodlandMansionsRecorderRunning = false;
 let buriedTreasureRecorderRunning = false;
 let heartsRecorderRunning = false;
+
+function anyRecorderRunning(): boolean {
+  return (
+    villageRecorderRunning ||
+    junglePyramidsRecorderRunning ||
+    desertWellsRecorderRunning ||
+    desertPyramidsRecorderRunning ||
+    pillagerOutpostsRecorderRunning ||
+    igloosRecorderRunning ||
+    swampHutsRecorderRunning ||
+    trailRuinsRecorderRunning ||
+    shipwrecksRecorderRunning ||
+    oceanRuinsRecorderRunning ||
+    woodlandMansionsRecorderRunning ||
+    buriedTreasureRecorderRunning ||
+    heartsRecorderRunning
+  );
+}
 
 function sendLong(bot: Bot, text: string): void {
   if (text.length <= MAX_CHAT_LENGTH) {
@@ -43,20 +62,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     const trimmed = message.trim().toLowerCase();
 
     if (trimmed === "startvillages") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -83,20 +89,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "startjunglepyramids") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -123,20 +116,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "startdesertwells") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -163,20 +143,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "startdesertpyramids") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -203,20 +170,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "startpillageroutposts") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -243,20 +197,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "startigloos") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -283,20 +224,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "startswamphuts") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -323,20 +251,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "starttrailruins") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -363,20 +278,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "startshipwrecks") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -402,21 +304,35 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
       return;
     }
 
+    if (trimmed === "startoceanruins") {
+      if (anyRecorderRunning()) {
+        bot.chat("A recorder is already running.");
+        return;
+      }
+      if (!config.oceanRuinsRecorder) {
+        bot.chat(
+          "Ocean ruins recorder not configured. Set OCEAN_RUINS_CSV_PATH and OCEAN_RUINS_OUTPUT_PATH in .env"
+        );
+        return;
+      }
+      oceanRuinsRecorderRunning = true;
+      bot.chat("Starting ocean ruins Y recorder...");
+      runVillageRecorder(bot, config.oceanRuinsRecorder)
+        .then(() => {
+          bot.chat("Ocean ruins recorder finished. Check output file.");
+        })
+        .catch((err) => {
+          log("Ocean ruins recorder error: %s", (err as Error).message);
+          bot.chat("Ocean ruins recorder failed: " + (err as Error).message);
+        })
+        .finally(() => {
+          oceanRuinsRecorderRunning = false;
+        });
+      return;
+    }
+
     if (trimmed === "startwoodlandmansions") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -443,20 +359,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "startburiedtreasure") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -483,20 +386,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
 
     if (trimmed === "starthearts") {
-      if (
-        villageRecorderRunning ||
-        junglePyramidsRecorderRunning ||
-        desertWellsRecorderRunning ||
-        desertPyramidsRecorderRunning ||
-        pillagerOutpostsRecorderRunning ||
-        igloosRecorderRunning ||
-        swampHutsRecorderRunning ||
-        trailRuinsRecorderRunning ||
-        shipwrecksRecorderRunning ||
-        buriedTreasureRecorderRunning ||
-        woodlandMansionsRecorderRunning ||
-        heartsRecorderRunning
-      ) {
+      if (anyRecorderRunning()) {
         bot.chat("A recorder is already running.");
         return;
       }
@@ -580,7 +470,7 @@ export function attachChatCommands(bot: Bot, config: BotConfig): void {
     }
     if (trimmed === "help" || trimmed === "commands") {
       bot.chat(
-        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, startigloos, startswamphuts, starttrailruins, startshipwrecks, startwoodlandmansions, startburiedtreasure, starthearts, help"
+        "ping, hello, where/pos, hp, inv, held, gm, xp, players, dim, status, startvillages, startjunglepyramids, startdesertwells, startdesertpyramids, startpillageroutposts, startigloos, startswamphuts, starttrailruins, startshipwrecks, startoceanruins, startwoodlandmansions, startburiedtreasure, starthearts, help"
       );
       return;
     }

@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld("mcBot", {
     runSwampHuts: (opts) => ipcRenderer.invoke("recorder:runSwampHuts", opts),
     runTrailRuins: (opts) => ipcRenderer.invoke("recorder:runTrailRuins", opts),
     runShipwrecks: (opts) => ipcRenderer.invoke("recorder:runShipwrecks", opts),
+    runOceanRuins: (opts) => ipcRenderer.invoke("recorder:runOceanRuins", opts),
     runWoodlandMansions: (opts) => ipcRenderer.invoke("recorder:runWoodlandMansions", opts),
     runBuriedTreasure: (opts) => ipcRenderer.invoke("recorder:runBuriedTreasure", opts),
     runHearts: (opts) => ipcRenderer.invoke("recorder:runHearts", opts),

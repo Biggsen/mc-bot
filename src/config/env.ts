@@ -16,6 +16,10 @@ export interface VillageRecorderConfig {
    * in a 16×16×16 box ahead of the bot (console only). Used for shipwreck runs.
    */
   consoleSouthWoodScan16?: boolean;
+  /**
+   * Wait for solid ground under the feet with looser vertical-motion checks (ocean sink / seabed).
+   */
+  relaxStableForFluidSink?: boolean;
 }
 
 export interface BotConfig {
@@ -38,6 +42,7 @@ export interface BotConfig {
   swampHutsRecorder: VillageRecorderConfig | undefined;
   trailRuinsRecorder: VillageRecorderConfig | undefined;
   shipwrecksRecorder: VillageRecorderConfig | undefined;
+  oceanRuinsRecorder: VillageRecorderConfig | undefined;
   buriedTreasureRecorder: VillageRecorderConfig | undefined;
   woodlandMansionsRecorder: VillageRecorderConfig | undefined;
   heartsRecorder: VillageRecorderConfig | undefined;
@@ -73,6 +78,7 @@ export function buildBotConfigFromConnection(
     swampHutsRecorder: undefined,
     trailRuinsRecorder: undefined,
     shipwrecksRecorder: undefined,
+    oceanRuinsRecorder: undefined,
     buriedTreasureRecorder: undefined,
     woodlandMansionsRecorder: undefined,
     heartsRecorder: undefined,
@@ -355,6 +361,34 @@ export function loadConfig(): BotConfig {
     };
   }
 
+  const oceanRuinsCsvPath = process.env.OCEAN_RUINS_CSV_PATH?.trim();
+  const oceanRuinsOutputPath = process.env.OCEAN_RUINS_OUTPUT_PATH?.trim();
+  let oceanRuinsRecorder: VillageRecorderConfig | undefined;
+  if (oceanRuinsCsvPath && oceanRuinsOutputPath) {
+    const tpY = parseInt(process.env.OCEAN_RUINS_TP_Y ?? "320", 10);
+    const delayAfterTpMs = parseInt(
+      process.env.OCEAN_RUINS_DELAY_AFTER_TP_MS ?? "800",
+      10
+    );
+    const waitForGround =
+      process.env.OCEAN_RUINS_WAIT_FOR_GROUND?.toLowerCase() !== "false";
+    const groundTimeoutMs = parseInt(
+      process.env.OCEAN_RUINS_GROUND_TIMEOUT_MS ?? "60000",
+      10
+    );
+    oceanRuinsRecorder = {
+      csvPath: oceanRuinsCsvPath,
+      outputPath: oceanRuinsOutputPath,
+      tpY: Number.isNaN(tpY) ? 320 : tpY,
+      delayAfterTpMs: Number.isNaN(delayAfterTpMs) ? 800 : delayAfterTpMs,
+      waitForGround,
+      groundTimeoutMs: Number.isNaN(groundTimeoutMs) ? 60000 : groundTimeoutMs,
+      logLabel: "Ocean ruin",
+      consoleSouthWoodScan16: false,
+      relaxStableForFluidSink: true,
+    };
+  }
+
   const woodlandMansionsCsvPath = process.env.WOODLAND_MANSIONS_CSV_PATH?.trim();
   const woodlandMansionsOutputPath = process.env.WOODLAND_MANSIONS_OUTPUT_PATH?.trim();
   let woodlandMansionsRecorder: VillageRecorderConfig | undefined;
@@ -453,6 +487,7 @@ export function loadConfig(): BotConfig {
     swampHutsRecorder,
     trailRuinsRecorder,
     shipwrecksRecorder,
+    oceanRuinsRecorder,
     buriedTreasureRecorder,
     woodlandMansionsRecorder,
     heartsRecorder,
